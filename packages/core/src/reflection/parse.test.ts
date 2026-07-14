@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isGrounded, parseReflection } from "./parse";
+import { isGrounded, parseReflection, PARSE_LIMITS } from "./parse";
 import { runReflection } from "./runReflection";
 import type { AIEngine, RawReflection } from "../ai/engine";
 
@@ -237,6 +237,152 @@ describe("parseReflection", () => {
       expect(result.roles).toEqual([]);
       expect(result.followUpQuestion.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("parseReflection — hårda gränser (robusthet)", () => {
+  const LONG = "en migrering ".repeat(200); // långt, förankringsbart citat
+  const TEXT_WITH_LONG = `Jag genomförde ${LONG} och det gick bra.`;
+
+  it("trunkerar antal decisions till maxgränsen", () => {
+    const raw: RawReflection = {
+      decisions: Array.from({ length: PARSE_LIMITS.maxDecisions + 15 }, () => ({
+        action: "Ledde en migrering",
+        capabilities: [],
+        sources: ["ledde också ett team på fyra personer"],
+      })),
+    };
+    expect(parseReflection(raw, USER_TEXT).decisions).toHaveLength(
+      PARSE_LIMITS.maxDecisions,
+    );
+  });
+
+  it("trunkerar antal strengths och roles till maxgränserna", () => {
+    const raw: RawReflection = {
+      strengths: Array.from({ length: PARSE_LIMITS.maxStrengths + 8 }, () => ({
+        statement: "Du är bra på ledarskap",
+        sources: ["ledde också ett team på fyra personer"],
+      })),
+      roles: Array.from({ length: PARSE_LIMITS.maxRoles + 8 }, () => ({
+        role: "Team Lead",
+        rationale: "leder team",
+        sources: ["ledde också ett team på fyra personer"],
+      })),
+    };
+    const result = parseReflection(raw, USER_TEXT);
+    expect(result.strengths).toHaveLength(PARSE_LIMITS.maxStrengths);
+    expect(result.roles).toHaveLength(PARSE_LIMITS.maxRoles);
+  });
+
+  it("trunkerar capabilities per decision och sources per post", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde en migrering",
+          capabilities: Array.from(
+            { length: PARSE_LIMITS.maxCapabilitiesPerDecision + 6 },
+            (_unused, i) => `kompetens-${i}`,
+          ),
+          sources: Array.from(
+            { length: PARSE_LIMITS.maxSourcesPerItem + 4 },
+            () => "ledde också ett team på fyra personer",
+          ),
+        },
+      ],
+    };
+    const decision = parseReflection(raw, USER_TEXT).decisions[0];
+    expect(decision).toBeDefined();
+    expect(decision?.capabilities).toHaveLength(
+      PARSE_LIMITS.maxCapabilitiesPerDecision,
+    );
+    // Alla källor är samma citat → dedup ger 1, väl under maxgränsen.
+    expect(decision?.sources.length).toBeLessThanOrEqual(
+      PARSE_LIMITS.maxSourcesPerItem,
+    );
+  });
+
+  it("kapar antal unika källor till maxgränsen", () => {
+    // Fem olika förankrade citat + ett sjätte → kapas till 5.
+    const raw: RawReflection = {
+      strengths: [
+        {
+          statement: "Bred erfarenhet",
+          sources: [
+            "Jag byggde om vårt onboarding-flöde",
+            "minskade churn med 12 procent",
+            "ledde också ett team på fyra personer",
+            "genom en stökig migrering",
+            "byggde om vårt onboarding-flöde och minskade churn",
+            "team på fyra personer genom en stökig migrering",
+          ],
+        },
+      ],
+    };
+    expect(parseReflection(raw, USER_TEXT).strengths[0]?.sources.length).toBe(
+      PARSE_LIMITS.maxSourcesPerItem,
+    );
+  });
+
+  it("trunkerar extremt långa fält", () => {
+    const longAction = "Jag ".concat("byggde ".repeat(400)).trim();
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: longAction,
+          capabilities: [],
+          sources: ["ledde också ett team på fyra personer"],
+        },
+      ],
+    };
+    const action = parseReflection(raw, USER_TEXT).decisions[0]?.action ?? "";
+    expect(action.length).toBeLessThanOrEqual(PARSE_LIMITS.maxFieldLength);
+    expect(action.endsWith("…")).toBe(true);
+  });
+
+  it("trunkerar en lång källa för visning men behåller förankringen på fulltext", () => {
+    const raw: RawReflection = {
+      strengths: [{ statement: "Erfaren av migreringar", sources: [LONG] }],
+    };
+    const source = parseReflection(raw, TEXT_WITH_LONG).strengths[0]?.sources[0];
+    expect(source).toBeDefined();
+    expect(source!.length).toBeLessThanOrEqual(PARSE_LIMITS.maxSourceLength);
+  });
+
+  it("filtrerar fortfarande bort oförankrade poster efter härdningen", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Påhittad jätteinsats",
+          capabilities: ["allt"],
+          sources: ["detta står inte i texten alls"],
+        },
+      ],
+      strengths: [
+        { statement: "Ogrundad styrka", sources: ["finns inte heller"] },
+      ],
+    };
+    const result = parseReflection(raw, USER_TEXT);
+    expect(result.decisions).toHaveLength(0);
+    expect(result.strengths).toHaveLength(0);
+  });
+
+  it("kastar aldrig på orimligt stor eller trasig input", () => {
+    const huge: RawReflection = {
+      decisions: Array.from({ length: 5000 }, () => ({
+        action: "x".repeat(5000),
+        capabilities: Array.from({ length: 200 }, (_u, i) => `c${i}`),
+        sources: Array.from({ length: 200 }, () => "y".repeat(5000)),
+      })),
+      followUpQuestion: "z".repeat(10000),
+    };
+    expect(() => parseReflection(huge, USER_TEXT)).not.toThrow();
+    const result = parseReflection(huge, USER_TEXT);
+    expect(result.decisions.length).toBeLessThanOrEqual(
+      PARSE_LIMITS.maxDecisions,
+    );
+    expect(result.followUpQuestion.length).toBeLessThanOrEqual(
+      PARSE_LIMITS.maxFollowUpLength,
+    );
   });
 });
 
