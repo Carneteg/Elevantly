@@ -1,0 +1,32 @@
+/**
+ * @elevantly/core — ramverksagnostisk domän, AI-lager och produktlogik för
+ * Spegeln. Ingen React, ingen Next, inga UI-antaganden. Webben (och en
+ * framtida app) importerar härifrån utan omskrivning.
+ */
+
+// Datamodell
+export type { ClaimKind, Decision } from "./decision";
+export type {
+  GroundedClaim,
+  Reflection,
+  RoleSuggestion,
+} from "./reflection";
+
+// AI-lager (motoragnostiskt)
+export type {
+  AIEngine,
+  RawReflection,
+  ReflectionInput,
+} from "./ai/engine";
+export { buildReflectionPrompt } from "./ai/prompt";
+export type { ReflectionPrompt } from "./ai/prompt";
+export {
+  ClaudeEngine,
+  DEFAULT_CLAUDE_MODEL,
+  EngineError,
+} from "./ai/claudeEngine";
+export type { ClaudeEngineOptions } from "./ai/claudeEngine";
+
+// Produktlogik
+export { parseReflection, isGrounded } from "./reflection/parse";
+export { runReflection } from "./reflection/runReflection";

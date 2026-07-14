@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Lugn, fokuserad palett (Steve Jobs-enkelhet: en skärm, ett fokus). */
+@theme {
+  --color-canvas: #faf9f7;
+  --color-ink: #1a1a1a;
+  --color-muted: #6b6b6b;
+  --color-line: #e7e4df;
+  --color-accent: #1a1a1a;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

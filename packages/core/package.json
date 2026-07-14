@@ -1,0 +1,23 @@
+{
+  "name": "@elevantly/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ramverksagnostisk domän, AI-lager och produktlogik för Spegeln.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

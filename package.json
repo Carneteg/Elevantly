@@ -1,0 +1,20 @@
+{
+  "name": "elevantly",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Elevantly — AI-first professionell identitetsplattform. Spegeln v1.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "build": "npm run build --workspace packages/core && npm run build --workspace apps/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace packages/core",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

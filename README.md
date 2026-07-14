@@ -37,7 +37,48 @@ Projektets principer, datamodell och arbetssätt beskrivs i
 [`CLAUDE.md`](./CLAUDE.md) — Elevantlys konstitution. Den gäller för alla
 som arbetar i projektet, människa som AI, och vinner vid konflikt.
 
+## Spegeln v1 — första produkten
+
+Spegeln är Elevantlys tunnaste produkt. Den besvarar en enda användarfråga:
+**"Vad säger det jag faktiskt gjort om vad jag är bra på — och vilka roller
+det pekar mot?"** Du skriver fritt om vad du gjort i jobbet; AI:n strukturerar
+det till beslutsposter och speglar tillbaka en tolkning — där varje påstående
+är förankrat i din egen text ("Grundat på: …"). Inget sparas mellan besök.
+
+Kravspecen finns i [`docs/spegeln-v1-spec.md`](./docs/spegeln-v1-spec.md).
+
+### Struktur (monorepo)
+
+```
+packages/core   Ramverksagnostisk domän, AI-lager och produktlogik.
+                Ingen React, ingen Next. Återanvänds av en framtida app.
+apps/web        Next.js-webbklient (Spegeln v1). Tunt UI ovanpå core.
+```
+
+AI-lagret är abstraherat bakom ett `AIEngine`-interface. Claude är motor #1;
+en GPT-motor kan implementeras mot samma interface utan att röra
+produktlogiken. Struktureringen (fritext → förankrade beslutsposter) lever i
+`packages/core` och är testad.
+
+### Kör lokalt
+
+```bash
+npm install
+cp .env.example apps/web/.env.local   # fyll i ANTHROPIC_API_KEY
+npm run dev                            # startar webben på http://localhost:3000
+```
+
+Nyckeln läses bara server-side i `/api/reflect` och lämnar aldrig servern.
+
+### Testa och bygga
+
+```bash
+npm test         # kör struktureringstesterna i packages/core
+npm run typecheck
+npm run build
+```
+
 ## Status
 
-Tidig fas. Vi definierar den tunnaste möjliga produkten som skapar verkligt
-användarvärde innan vi bygger vidare.
+Spegeln v1 under utveckling. Vi bygger den tunnaste möjliga produkten som
+skapar verkligt användarvärde innan vi bygger vidare.
