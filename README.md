@@ -88,6 +88,27 @@ npm run typecheck
 npm run build
 ```
 
+Dessa tester använder en fejkad AI-motor och kräver ingen nyckel.
+
+### End-to-end-verifiering mot skarp modell
+
+Bekräftar att hela `runReflection`-flödet fungerar mot en **riktig** Claude-modell
+och att ärlighetsinvarianterna håller på skarpa svar: varje visad post är
+förankrad i ett ordagrant citat, ingen post är `kind: "verified"`, och
+ansvarsnivån överstiger aldrig vad texten stödjer (tvetydig text ger `unknown`,
+inte `owned`/`led`). Bryts en invariant avslutas skriptet med felkod.
+
+```bash
+export ANTHROPIC_API_KEY=sk-...   # läses bara från miljön, lagras aldrig i repot
+npm run verify:e2e
+```
+
+- **Kostar riktiga API-anrop.** Kör den medvetet, inte i en snäv loop.
+- Modell: `claude-sonnet-5` som standard, override via `ANTHROPIC_MODEL`. Skriptet
+  skriver ut vilken modell som faktiskt anropas.
+- **Körs inte i CI** (CI har ingen nyckel och ska inte kosta) — det är en manuell,
+  lokal rutin.
+
 ## Status
 
 Spegeln v1 under utveckling. Vi bygger den tunnaste möjliga produkten som
