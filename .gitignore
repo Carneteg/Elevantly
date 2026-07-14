@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# env — never commit real secrets (only .env.example is tracked)
+.env
+.env*.local
+
+# logs
+npm-debug.log*
+*.log
+
+# test coverage
+coverage/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
