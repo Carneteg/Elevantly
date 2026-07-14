@@ -1,5 +1,37 @@
-import type { Reflection } from "@elevantly/core";
+import type {
+  Confidence,
+  Reflection,
+  ResponsibilityLevel,
+} from "@elevantly/core";
 import { Sources } from "./Sources";
+
+/** Ärlig formulering av ansvarsnivå — attribuerar till användarens egen text,
+ *  höjer aldrig nivån, och visar inget alls när stöd saknas ("unknown"). */
+function responsibilityLabel(level: ResponsibilityLevel): string | null {
+  switch (level) {
+    case "participated":
+      return "Du beskriver att du deltog i det här";
+    case "contributed":
+      return "Du beskriver att du bidrog till det här";
+    case "led":
+      return "Du beskriver att du ledde det här";
+    case "owned":
+      return "Du beskriver att du hade helhetsansvar för det här";
+    case "unknown":
+      return null;
+  }
+}
+
+function confidenceLabel(confidence: Confidence): string {
+  switch (confidence) {
+    case "high":
+      return "hög tilltro";
+    case "medium":
+      return "medel tilltro";
+    case "low":
+      return "låg tilltro";
+  }
+}
 
 /**
  * Presentation av Spegelns svar. Ren och tillståndslös — all logik och
@@ -31,6 +63,11 @@ export function ReflectionView({ reflection }: { reflection: Reflection }) {
                     className="rounded-xl border border-[var(--color-line)] bg-white/50 p-5"
                   >
                     <p className="text-lg leading-snug">{decision.action}</p>
+                    {responsibilityLabel(decision.responsibility) && (
+                      <p className="mt-1 text-sm text-[var(--color-muted)]">
+                        {responsibilityLabel(decision.responsibility)}
+                      </p>
+                    )}
                     {decision.outcome && (
                       <p className="mt-1 text-[var(--color-ink)]">
                         <span className="text-[var(--color-muted)]">
@@ -47,7 +84,7 @@ export function ReflectionView({ reflection }: { reflection: Reflection }) {
                     {decision.capabilities.length > 0 && (
                       <div className="mt-3">
                         <p className="text-sm text-[var(--color-muted)]">
-                          Kompetenser detta kan peka på:
+                          Kompetenser detta kan peka på (AI-tolkning):
                         </p>
                         <ul className="mt-2 flex flex-wrap gap-2">
                           {decision.capabilities.map((cap, j) => (
@@ -55,7 +92,10 @@ export function ReflectionView({ reflection }: { reflection: Reflection }) {
                               key={j}
                               className="rounded-full border border-[var(--color-line)] px-3 py-1 text-sm text-[var(--color-muted)]"
                             >
-                              {cap}
+                              {cap.name}
+                              <span className="ml-1 opacity-70">
+                                · {confidenceLabel(cap.confidence)}
+                              </span>
                             </li>
                           ))}
                         </ul>

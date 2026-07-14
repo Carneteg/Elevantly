@@ -1,4 +1,9 @@
-import type { Decision } from "../decision";
+import type {
+  CapabilityClaim,
+  Confidence,
+  Decision,
+  ResponsibilityLevel,
+} from "../decision";
 import type {
   GroundedClaim,
   Reflection,
@@ -144,6 +149,162 @@ function boundSources(grounded: string[]): string[] {
     .map((source) => truncate(source, PARSE_LIMITS.maxSourceLength));
 }
 
+/** Läser confidence konservativt: ogiltigt/saknat → "low". */
+function parseConfidence(value: unknown): Confidence {
+  return value === "high" || value === "medium" || value === "low"
+    ? value
+    : "low";
+}
+
+/**
+ * Typade capabilities. Varje kompetens måste bära minst ett ordagrant förankrat
+ * citat, annars filtreras den bort deterministiskt (samma förankringskrav som
+ * övriga poster). `kind` sätts alltid till "interpretation" här — motorn får
+ * aldrig flagga en kompetens som verifierad. Deduplicering sker på namn.
+ */
+function parseCapabilities(
+  value: unknown,
+  originalText: string,
+): CapabilityClaim[] {
+  if (!Array.isArray(value)) return [];
+  const capabilities: CapabilityClaim[] = [];
+  const seen = new Set<string>();
+  for (const raw of value.slice(0, PARSE_LIMITS.maxScanItems)) {
+    if (capabilities.length >= PARSE_LIMITS.maxCapabilitiesPerDecision) break;
+    if (!isRecord(raw)) continue;
+
+    const name = asString(raw.name);
+    if (name.length === 0) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+
+    const sources = boundSources(collectGroundedSources(raw, originalText));
+    if (sources.length === 0) continue; // ingen förankrad källa → visas inte
+
+    seen.add(key);
+    capabilities.push({
+      name: truncate(name, PARSE_LIMITS.maxCapabilityLength),
+      // Alltid tolkning — aldrig verified, aldrig från motorn.
+      kind: "interpretation",
+      confidence: parseConfidence(raw.confidence),
+      sources,
+    });
+  }
+  return capabilities;
+}
+
+/** Ordning låg→hög. "unknown" står utanför skalan (inget stöd). */
+const RESPONSIBILITY_ORDER: readonly Exclude<ResponsibilityLevel, "unknown">[] =
+  ["participated", "contributed", "led", "owned"] as const;
+
+/**
+ * Textmarkörer (svenska + engelska) som stödjer en nivå. Konservativa och
+ * avsiktligt justerbara — en guard som bara kan SÄNKA en nivå, aldrig höja den.
+ */
+const RESPONSIBILITY_CUES: Record<
+  Exclude<ResponsibilityLevel, "unknown">,
+  string[]
+> = {
+  owned: [
+    "ägde",
+    "ansvarade för",
+    "ansvarig för",
+    "hade ansvar",
+    "helhetsansvar",
+    "grundade",
+    "startade",
+    "byggde upp",
+    "owned",
+    "founded",
+    "was responsible for",
+    "accountable for",
+    "full ownership",
+  ],
+  led: [
+    "ledde",
+    "leder",
+    "ledande roll",
+    "drev",
+    "chef",
+    "chefade",
+    "styrde",
+    "managed",
+    "headed",
+    "spearheaded",
+    "team lead",
+    "in charge of",
+  ],
+  contributed: [
+    "bidrog",
+    "var med och",
+    "medverkade",
+    "hjälpte till",
+    "delaktig",
+    "contributed",
+    "helped",
+  ],
+  participated: [
+    "deltog",
+    "var med i",
+    "var del av",
+    "var en del av",
+    "involverad",
+    "assisterade",
+    "participated",
+    "was part of",
+    "took part",
+  ],
+};
+
+/** Högsta ansvarsnivå de förankrade citaten uttryckligen stödjer, annars "unknown". */
+function supportedResponsibility(sources: string[]): ResponsibilityLevel {
+  const haystack = normalize(sources.join(" "));
+  let best: ResponsibilityLevel = "unknown";
+  let bestRank = -1;
+  for (let rank = 0; rank < RESPONSIBILITY_ORDER.length; rank++) {
+    const level = RESPONSIBILITY_ORDER[rank]!;
+    const supported = RESPONSIBILITY_CUES[level].some((cue) =>
+      haystack.includes(normalize(cue)),
+    );
+    if (supported && rank > bestRank) {
+      best = level;
+      bestRank = rank;
+    }
+  }
+  return best;
+}
+
+/**
+ * Slutlig ansvarsnivå: aldrig högre än vad citaten stödjer. Motorns förslag
+ * fungerar bara som ett tak (kan sänka, aldrig höja); avstår motorn ("unknown")
+ * låter vi texten bestämma. Utan textstöd → "unknown". Produktlogiken har sista
+ * ordet, inte motorn.
+ */
+function resolveResponsibility(
+  aiClaim: ResponsibilityLevel,
+  sources: string[],
+): ResponsibilityLevel {
+  const supported = supportedResponsibility(sources);
+  if (supported === "unknown") return "unknown";
+  const supportedRank = RESPONSIBILITY_ORDER.indexOf(supported);
+  // Avstår motorn → ingen cap (texten bestämmer). Annars kapar motorns förslag.
+  const claimRank =
+    aiClaim === "unknown"
+      ? RESPONSIBILITY_ORDER.length - 1
+      : RESPONSIBILITY_ORDER.indexOf(aiClaim);
+  return RESPONSIBILITY_ORDER[Math.min(claimRank, supportedRank)]!;
+}
+
+/** Läser motorns responsibility-förslag; ogiltigt/saknat → "unknown". */
+function parseResponsibilityClaim(value: unknown): ResponsibilityLevel {
+  return value === "participated" ||
+    value === "contributed" ||
+    value === "led" ||
+    value === "owned"
+    ? value
+    : "unknown";
+}
+
 function parseDecisions(value: unknown, originalText: string): Decision[] {
   if (!Array.isArray(value)) return [];
   const decisions: Decision[] = [];
@@ -159,9 +320,6 @@ function parseDecisions(value: unknown, originalText: string): Decision[] {
 
     const context = asString(raw.context);
     const outcome = asString(raw.outcome);
-    const capabilities = asStringArray(raw.capabilities)
-      .slice(0, PARSE_LIMITS.maxCapabilitiesPerDecision)
-      .map((cap) => truncate(cap, PARSE_LIMITS.maxCapabilityLength));
 
     decisions.push({
       action: truncate(action, PARSE_LIMITS.maxFieldLength),
@@ -171,7 +329,12 @@ function parseDecisions(value: unknown, originalText: string): Decision[] {
       ...(outcome.length > 0
         ? { outcome: truncate(outcome, PARSE_LIMITS.maxFieldLength) }
         : {}),
-      capabilities,
+      capabilities: parseCapabilities(raw.capabilities, originalText),
+      // Ansvarsnivå härledd ur citaten, aldrig högre än texten stödjer.
+      responsibility: resolveResponsibility(
+        parseResponsibilityClaim(raw.responsibility),
+        sources,
+      ),
       sources,
       // En Decision vilar på användarens egna ord. Aldrig verified i v1.
       kind: "quote",

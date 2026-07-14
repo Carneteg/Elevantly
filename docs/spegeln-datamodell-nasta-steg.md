@@ -1,14 +1,15 @@
 # Spegeln — datamodell, nästa steg
 
-> Status: beslutade nästa steg, **ej implementerade** och **inte blockerande
-> för v1**. Kompletterar CLAUDE.md (dataprinciperna) och
-> `docs/spegeln-v1-spec.md`. Ändringar kräver beslut av produktägaren.
+> Status: **implementerad**. Punkterna nedan är byggda i `@elevantly/core`
+> (`CapabilityClaim`, `ResponsibilityLevel` på `Decision`) och testade.
+> Kompletterar CLAUDE.md (dataprinciperna) och `docs/spegeln-v1-spec.md`.
+> Ändringar kräver beslut av produktägaren.
 
 Bakgrund: en granskning av Spegeln v1 (PR #1) landade i att den verkliga
 tillitsrisken inte är *quote vs interpretation* utan i **ansvarsnivå** — att
 systemet inte får tillskriva användaren mer ägarskap över en handling än
 texten stödjer. `Decision.kind = "quote"` behålls; nedanstående adresserar
-ansvar och capability-tillit i en kommande datamodellsomgång.
+ansvar och capability-tillit.
 
 ## 1. Typade capabilities (i stället för `string[]`)
 
@@ -29,6 +30,12 @@ interface CapabilityClaim {
 
 Så bär varje capability sin egen `kind`, `confidence` och `sources` — och
 ingen yta kan råka presentera en inferens som ett konstaterande.
+
+**Implementerat:** `parseReflection` filtrerar bort en capability som saknar
+minst ett ordagrant förankrat citat, sätter `kind` deterministiskt till
+`"interpretation"` (aldrig `"verified"`, aldrig från motorn) och defaultar
+`confidence` konservativt till `"low"` när den saknas/är ogiltig. UI:t visar
+namn + tilltro, tydligt som AI-tolkning.
 
 ## 2. Ansvarsnivå (responsibility level)
 
@@ -53,10 +60,17 @@ Regler som måste följa med:
 - UI:t får aldrig formulera en handling som att användaren ägde eller fattade
   ett beslut om nivån inte stödjer det.
 
-## Varför inte i v1
+**Implementerat:** produktlogiken beräknar den högsta nivå de förankrade
+citaten uttryckligen stödjer (via konservativa, justerbara textmarkörer i
+`parse.ts`) och kapar motorns förslag ner till den — motorns förslag kan bara
+sänka, aldrig höja. Avstår motorn (`"unknown"`) låter vi texten bestämma;
+saknas textstöd blir nivån `"unknown"`. UI:t formulerar nivån ärligt
+("Du beskriver att du deltog i …" vs "… ledde …") och visar inget alls vid
+`"unknown"`. Textmarkörerna är en medveten guard, inte fritextdriven logik —
+de kan bara sänka en nivå.
 
-v1 bevisar kärntesen (förankrade handlingar → värde direkt) med minsta möjliga
-yta. Ovanstående är renodlade datamodellstillägg som kan läggas på utan att
-kasta om grunden: `Decision`, `ClaimKind` och AI-lagret är redan rena och
-återanvändbara. De byggs när de tjänar en namngiven användarfråga (CLAUDE.md
-7.1), inte innan.
+## Status
+
+Byggt och testat. `Decision`, `ClaimKind` och AI-lagret förblev rena och
+återanvändbara — tilläggen krävde ingen omskrivning av grunden. Byggdes när de
+tjänade en namngiven användarfråga (CLAUDE.md 7.1).

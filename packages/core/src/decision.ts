@@ -12,6 +12,44 @@
  */
 export type ClaimKind = "quote" | "interpretation" | "verified";
 
+/** Hur säker en inferens är. Konservativ som standard (låg). */
+export type Confidence = "low" | "medium" | "high";
+
+/**
+ * En kompetens handlingen kan peka på. Detta är en AI-TOLKNING, inte ett
+ * konstaterande — därför bär den sin egen härkomst (`kind`, `confidence`,
+ * `sources`) så att ingen yta av misstag kan visa den som verifierad fakta.
+ */
+export interface CapabilityClaim {
+  /** Kompetensens namn. */
+  name: string;
+  /**
+   * Ärlighetsmarkör. Alltid `"interpretation"` i v1 — sätts deterministiskt av
+   * produktlogiken, aldrig av AI-motorn, och blir aldrig `"verified"`.
+   */
+  kind: ClaimKind;
+  /** Hur säker tolkningen är. */
+  confidence: Confidence;
+  /**
+   * Ordagranna citat ur användarens text som kompetensen härletts från. Minst
+   * ett — utan spårbar källa filtreras kompetensen bort (CLAUDE.md 8.3).
+   */
+  sources: string[];
+}
+
+/**
+ * Vilken ansvarsnivå användarens egen text stödjer för en handling. Systemet
+ * får ALDRIG tillskriva en högre nivå än texten uttryckligen stödjer; saknas
+ * stöd → `"unknown"`. Nivån sätts deterministiskt av produktlogiken (inte
+ * motorn), samma mönster som `kind`.
+ */
+export type ResponsibilityLevel =
+  | "participated"
+  | "contributed"
+  | "led"
+  | "owned"
+  | "unknown";
+
 /**
  * Decision — Elevantlys grundenhet (CLAUDE.md 7.2: beslut & utfall framför titlar).
  *
@@ -30,8 +68,16 @@ export interface Decision {
   context?: string;
   /** Mätbart utfall om det finns ("minskade churn 12%"). Valfri. */
   outcome?: string;
-  /** Kompetenser handlingen kan peka på (AI-inferens, inte konstaterande). */
-  capabilities: string[];
+  /**
+   * Kompetenser handlingen kan peka på. Typade tolkningar (inte konstateranden):
+   * varje bär egen `confidence` och förankring. Kan vara tom.
+   */
+  capabilities: CapabilityClaim[];
+  /**
+   * Ansvarsnivå som användarens text stödjer för handlingen. Sätts
+   * deterministiskt av produktlogiken och aldrig högre än texten stödjer.
+   */
+  responsibility: ResponsibilityLevel;
   /**
    * Ordagranna textutdrag ur användarens input som posten vilar på. Minst ett —
    * driver förankringen ("Du skrev: ..."). Utan minst en spårbar källa visas
