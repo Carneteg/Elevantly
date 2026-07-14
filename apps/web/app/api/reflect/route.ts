@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
-import { ClaudeEngine, EngineError, runReflection } from "@elevantly/core";
-import type { Reflection } from "@elevantly/core";
+import {
+  ClaudeEngine,
+  EngineError,
+  InMemoryRateLimiter,
+  runReflection,
+} from "@elevantly/core";
+import type { RateLimiter, Reflection } from "@elevantly/core";
 
 /**
  * Server-route för Spegeln. Här — och bara här — läses API-nyckeln ur miljön;
@@ -9,8 +14,24 @@ import type { Reflection } from "@elevantly/core";
  */
 export const runtime = "nodejs";
 
-/** Rimlig övre gräns så en förfrågan inte kan svälla obegränsat. */
-const MAX_INPUT_LENGTH = 6000;
+/**
+ * Hård övre gräns på användartexten. Avvisas här, innan den skickas till
+ * AI-motorn, så att ett anrop inte kan svälla obegränsat.
+ */
+const MAX_INPUT_LENGTH = 8000;
+
+/**
+ * Per-IP rate limit. Delas som en modulnivå-singleton så att den lever mellan
+ * förfrågningar inom instansen.
+ *
+ * OBS: in-memory-varianten är per-instans och inte distributionssäker (se
+ * @elevantly/core). Duger för demo/enkel drift; byt till en delad store (Redis
+ * e.d.) bakom `RateLimiter` inför skalning — route-logiken behöver inte röras.
+ */
+const rateLimiter: RateLimiter = new InMemoryRateLimiter({
+  limit: 10,
+  windowMs: 60_000,
+});
 
 interface ReflectResponse {
   reflection: Reflection;
@@ -22,6 +43,16 @@ interface ErrorResponse {
 export async function POST(
   request: Request,
 ): Promise<NextResponse<ReflectResponse | ErrorResponse>> {
+  // 1. Rate limit först — billigt, och skyddar allt nedanför.
+  const rate = await rateLimiter.check(getClientIp(request));
+  if (!rate.allowed) {
+    return jsonError(
+      "För många förfrågningar, försök igen om en stund.",
+      429,
+      { "Retry-After": String(rate.retryAfterSeconds) },
+    );
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -65,9 +96,25 @@ export async function POST(
   }
 }
 
+/**
+ * Bästa gissning av klientens IP från proxy-headers. Bakom en betrodd proxy
+ * är `x-forwarded-for` den vanliga källan; annars faller vi tillbaka till en
+ * gemensam hink ("unknown"). För demo/enkel drift räcker det; en produktions-
+ * uppsättning bör konfigurera vilken proxy som får sätta headern.
+ */
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
 function jsonError(
   message: string,
   status: number,
+  headers?: Record<string, string>,
 ): NextResponse<ErrorResponse> {
-  return NextResponse.json({ error: message }, { status });
+  return NextResponse.json({ error: message }, { status, headers });
 }

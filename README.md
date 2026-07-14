@@ -60,6 +60,16 @@ en GPT-motor kan implementeras mot samma interface utan att röra
 produktlogiken. Struktureringen (fritext → förankrade beslutsposter) lever i
 `packages/core` och är testad.
 
+### Robusthet
+
+`/api/reflect` har en enkel per-IP rate limit (10 förfrågningar/minut →
+`429` med `Retry-After`) och hårda input-/parser-gränser (max 8 000 tecken in;
+antal och längder på AI-svarets poster kapas i stället för att krascha).
+Rate-limitern är abstraherad bakom ett `RateLimiter`-interface, precis som
+`AIEngine`. **In-memory-implementationen är per-instans och inte
+distributionssäker** — den duger för demo/enkel drift; byt till en delad store
+(Redis e.d.) bakom samma interface inför skalning, utan att röra route-logiken.
+
 ### Kör lokalt
 
 ```bash
@@ -73,7 +83,7 @@ Nyckeln läses bara server-side i `/api/reflect` och lämnar aldrig servern.
 ### Testa och bygga
 
 ```bash
-npm test         # kör struktureringstesterna i packages/core
+npm test         # kör tester i alla paket (strukturering, rate limit, route-gränser)
 npm run typecheck
 npm run build
 ```

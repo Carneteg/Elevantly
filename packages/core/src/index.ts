@@ -28,5 +28,15 @@ export {
 export type { ClaudeEngineOptions } from "./ai/claudeEngine";
 
 // Produktlogik
-export { parseReflection, isGrounded } from "./reflection/parse";
+export { parseReflection, isGrounded, PARSE_LIMITS } from "./reflection/parse";
 export { runReflection } from "./reflection/runReflection";
+
+// Robusthet: rate limiting (utbytbart lager, som AIEngine)
+export {
+  InMemoryRateLimiter,
+} from "./ratelimit/rateLimiter";
+export type {
+  RateLimiter,
+  RateLimitResult,
+  InMemoryRateLimiterOptions,
+} from "./ratelimit/rateLimiter";
