@@ -23,7 +23,7 @@ export function ReflectionView({ reflection }: { reflection: Reflection }) {
       ) : (
         <>
           {decisions.length > 0 && (
-            <Section title="Besluten jag läste ut">
+            <Section title="Handlingar jag identifierade i din text">
               <ul className="flex flex-col gap-6">
                 {decisions.map((decision, i) => (
                   <li
