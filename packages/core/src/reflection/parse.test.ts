@@ -42,11 +42,26 @@ describe("parseReflection", () => {
     const raw: RawReflection = {
       decisions: [
         {
-          action: "Byggde om onboarding-flödet",
+          action: "Ledde ett team genom en migrering",
           context: "internt produktarbete",
           outcome: "minskade churn med 12 procent",
-          capabilities: ["produktutveckling", "dataanalys"],
-          sources: ["minskade churn med 12 procent"],
+          capabilities: [
+            {
+              name: "ledarskap",
+              confidence: "high",
+              sources: ["ledde också ett team på fyra personer"],
+            },
+            {
+              name: "förändringsledning",
+              confidence: "medium",
+              sources: ["genom en stökig migrering"],
+            },
+          ],
+          responsibility: "led",
+          sources: [
+            "ledde också ett team på fyra personer",
+            "genom en stökig migrering",
+          ],
         },
       ],
       strengths: [
@@ -69,11 +84,28 @@ describe("parseReflection", () => {
 
     expect(result.decisions).toHaveLength(1);
     expect(result.decisions[0]).toEqual({
-      action: "Byggde om onboarding-flödet",
+      action: "Ledde ett team genom en migrering",
       context: "internt produktarbete",
       outcome: "minskade churn med 12 procent",
-      capabilities: ["produktutveckling", "dataanalys"],
-      sources: ["minskade churn med 12 procent"],
+      capabilities: [
+        {
+          name: "ledarskap",
+          kind: "interpretation",
+          confidence: "high",
+          sources: ["ledde också ett team på fyra personer"],
+        },
+        {
+          name: "förändringsledning",
+          kind: "interpretation",
+          confidence: "medium",
+          sources: ["genom en stökig migrering"],
+        },
+      ],
+      responsibility: "led",
+      sources: [
+        "ledde också ett team på fyra personer",
+        "genom en stökig migrering",
+      ],
       kind: "quote",
     });
 
@@ -167,12 +199,29 @@ describe("parseReflection", () => {
     expect(parseReflection(raw, USER_TEXT).decisions).toHaveLength(0);
   });
 
-  it("utelämnar valfria fält när de saknas och normaliserar capabilities", () => {
+  it("utelämnar valfria fält när de saknas och dedup/filtrerar capabilities", () => {
     const raw: RawReflection = {
       decisions: [
         {
           action: "Ledde en migrering",
-          capabilities: ["ledarskap", "  ledarskap ", "", "migrering"],
+          capabilities: [
+            {
+              name: "ledarskap",
+              confidence: "medium",
+              sources: ["ledde också ett team på fyra personer"],
+            },
+            {
+              name: "  Ledarskap ", // dubblett (skiftläge/whitespace) → bort
+              confidence: "high",
+              sources: ["ledde också ett team på fyra personer"],
+            },
+            { name: "", confidence: "low", sources: ["genom en stökig migrering"] }, // tomt namn → bort
+            {
+              name: "migrering",
+              confidence: "low",
+              sources: ["genom en stökig migrering"],
+            },
+          ],
           sources: ["ledde också ett team på fyra personer"],
         },
       ],
@@ -182,8 +231,10 @@ describe("parseReflection", () => {
     expect(decision).toBeDefined();
     expect(decision).not.toHaveProperty("context");
     expect(decision).not.toHaveProperty("outcome");
-    // dubbletter (skiftlägesokänsligt) och tomma strängar bort
-    expect(decision?.capabilities).toEqual(["ledarskap", "migrering"]);
+    expect(decision?.capabilities.map((cap) => cap.name)).toEqual([
+      "ledarskap",
+      "migrering",
+    ]);
   });
 
   it("kräver förankrad källa även för roller", () => {
@@ -240,6 +291,177 @@ describe("parseReflection", () => {
   });
 });
 
+describe("parseReflection — typade capabilities", () => {
+  it("filtrerar bort en capability utan förankrat citat", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde en migrering",
+          capabilities: [
+            {
+              name: "ledarskap",
+              confidence: "high",
+              sources: ["ledde också ett team på fyra personer"], // förankrad
+            },
+            {
+              name: "rymdteknik",
+              confidence: "high",
+              sources: ["byggde en rymdraket"], // finns inte i texten → bort
+            },
+          ],
+          sources: ["ledde också ett team på fyra personer"],
+        },
+      ],
+    };
+
+    const caps = parseReflection(raw, USER_TEXT).decisions[0]?.capabilities;
+    expect(caps?.map((c) => c.name)).toEqual(["ledarskap"]);
+  });
+
+  it("sätter capability-kind till interpretation — aldrig verified från motorn", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde en migrering",
+          capabilities: [
+            {
+              name: "ledarskap",
+              kind: "verified", // motorns försök ignoreras
+              confidence: "high",
+              sources: ["ledde också ett team på fyra personer"],
+            },
+          ],
+          sources: ["ledde också ett team på fyra personer"],
+        },
+      ],
+    };
+
+    expect(
+      parseReflection(raw, USER_TEXT).decisions[0]?.capabilities[0]?.kind,
+    ).toBe("interpretation");
+  });
+
+  it("bevarar giltig confidence och defaultar konservativt till low", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde en migrering",
+          capabilities: [
+            {
+              name: "ledarskap",
+              confidence: "high",
+              sources: ["ledde också ett team på fyra personer"],
+            },
+            {
+              name: "migrering",
+              // confidence saknas → low
+              sources: ["genom en stökig migrering"],
+            },
+            {
+              name: "samarbete",
+              confidence: "banana", // ogiltig → low
+              sources: ["ett team på fyra personer"],
+            },
+          ],
+          sources: ["ledde också ett team på fyra personer"],
+        },
+      ],
+    };
+
+    const caps = parseReflection(raw, USER_TEXT).decisions[0]?.capabilities;
+    expect(caps?.map((c) => [c.name, c.confidence])).toEqual([
+      ["ledarskap", "high"],
+      ["migrering", "low"],
+      ["samarbete", "low"],
+    ]);
+  });
+});
+
+describe("parseReflection — ansvarsnivå (responsibility)", () => {
+  it("faller till unknown utan tydligt stöd i texten", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Förbättrade onboarding",
+          capabilities: [],
+          responsibility: "led", // motorn påstår led …
+          sources: ["minskade churn med 12 procent"], // … men citatet stödjer ingen nivå
+        },
+      ],
+    };
+    expect(parseReflection(raw, USER_TEXT).decisions[0]?.responsibility).toBe(
+      "unknown",
+    );
+  });
+
+  it("sätter aldrig högre ansvarsnivå än texten medger", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde ett team",
+          capabilities: [],
+          responsibility: "owned", // motorn överdriver
+          sources: ["ledde också ett team på fyra personer"], // texten stödjer "led"
+        },
+      ],
+    };
+    const responsibility = parseReflection(raw, USER_TEXT).decisions[0]
+      ?.responsibility;
+    expect(responsibility).toBe("led");
+    expect(responsibility).not.toBe("owned");
+  });
+
+  it("bevarar en ansvarsnivå som texten uttryckligen stödjer", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde ett team",
+          capabilities: [],
+          responsibility: "led",
+          sources: ["ledde också ett team på fyra personer"],
+        },
+      ],
+    };
+    expect(parseReflection(raw, USER_TEXT).decisions[0]?.responsibility).toBe(
+      "led",
+    );
+  });
+
+  it("härleder nivån ur citaten när motorn avstår (unknown)", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde ett team",
+          capabilities: [],
+          // ingen responsibility från motorn → texten får bestämma
+          sources: ["ledde också ett team på fyra personer"],
+        },
+      ],
+    };
+    expect(parseReflection(raw, USER_TEXT).decisions[0]?.responsibility).toBe(
+      "led",
+    );
+  });
+
+  it("kapar en överdriven nivå ner till det svagare textstödet", () => {
+    // Texten säger bara "deltog i" → participated, även om motorn påstår owned.
+    const text = "Jag deltog i en stor omorganisation under året.";
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Var med i omorganisationen",
+          capabilities: [],
+          responsibility: "owned",
+          sources: ["deltog i en stor omorganisation"],
+        },
+      ],
+    };
+    expect(parseReflection(raw, text).decisions[0]?.responsibility).toBe(
+      "participated",
+    );
+  });
+});
+
 describe("parseReflection — hårda gränser (robusthet)", () => {
   const LONG = "en migrering ".repeat(200); // långt, förankringsbart citat
   const TEXT_WITH_LONG = `Jag genomförde ${LONG} och det gick bra.`;
@@ -281,7 +503,11 @@ describe("parseReflection — hårda gränser (robusthet)", () => {
           action: "Ledde en migrering",
           capabilities: Array.from(
             { length: PARSE_LIMITS.maxCapabilitiesPerDecision + 6 },
-            (_unused, i) => `kompetens-${i}`,
+            (_unused, i) => ({
+              name: `kompetens-${i}`,
+              confidence: "low",
+              sources: ["ledde också ett team på fyra personer"],
+            }),
           ),
           sources: Array.from(
             { length: PARSE_LIMITS.maxSourcesPerItem + 4 },
@@ -367,11 +593,18 @@ describe("parseReflection — hårda gränser (robusthet)", () => {
   });
 
   it("kastar aldrig på orimligt stor eller trasig input", () => {
+    // Överskrider alla gränser (antal poster, kandidater, fältlängder) men hålls
+    // litet nog att köra snabbt — skanningstaken ska ändå kapa arbetet.
     const huge: RawReflection = {
-      decisions: Array.from({ length: 5000 }, () => ({
-        action: "x".repeat(5000),
-        capabilities: Array.from({ length: 200 }, (_u, i) => `c${i}`),
-        sources: Array.from({ length: 200 }, () => "y".repeat(5000)),
+      decisions: Array.from({ length: 400 }, () => ({
+        action: "x".repeat(2000),
+        capabilities: Array.from({ length: 40 }, (_u, i) => ({
+          name: `c${i}`,
+          confidence: "high",
+          sources: ["y".repeat(2000)],
+        })),
+        responsibility: "owned",
+        sources: Array.from({ length: 40 }, () => "y".repeat(2000)),
       })),
       followUpQuestion: "z".repeat(10000),
     };
