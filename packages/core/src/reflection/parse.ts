@@ -12,7 +12,12 @@ import type { RawReflection } from "../ai/engine";
  * riktig motor. Den upprätthåller CLAUDE.md 8.3: inget påstående får visas
  * som fakta utan spårbar källa i användarens egen text.
  *
- * Allt som saknar obligatoriska fält, eller vars sourceText inte återfinns i
+ * Förankringen är NÖDVÄNDIG men inte tillräcklig: ett citat bevisar bara att
+ * texten finns, inte att slutsatsen följer av den. Därför sätter denna funktion
+ * också `kind` (deterministiskt, aldrig från motorn) så att UI:t kan vara
+ * ärligt om vad som är användarens ord och vad som är AI:ns tolkning.
+ *
+ * Allt som saknar obligatoriska fält, eller vars alla källor inte återfinns i
  * användarens text, filtreras bort. Funktionen kastar aldrig — trasig eller
  * ofullständig input ger en tom (men giltig) Reflection.
  */
@@ -61,16 +66,43 @@ function asStringArray(value: unknown): string[] {
   return result;
 }
 
+/**
+ * Samlar de källor en post FAKTISKT vilar på: bara ordagrant förankrade citat.
+ * Läser både `sources` (array) och `sourceText` (enkel sträng, bakåtkompatibelt)
+ * så att motorvariationer tolereras. Dubbletter tas bort; oförankrade citat
+ * släpps. Tom lista ⇒ posten får inte visas.
+ */
+function collectGroundedSources(
+  raw: Record<string, unknown>,
+  originalText: string,
+): string[] {
+  const candidates: string[] = [
+    ...asStringArray(raw.sources),
+    ...(asString(raw.sourceText).length > 0 ? [asString(raw.sourceText)] : []),
+  ];
+
+  const seen = new Set<string>();
+  const grounded: string[] = [];
+  for (const candidate of candidates) {
+    if (!isGrounded(candidate, originalText)) continue;
+    const key = normalize(candidate);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    grounded.push(candidate);
+  }
+  return grounded;
+}
+
 function parseDecisions(value: unknown, originalText: string): Decision[] {
   if (!Array.isArray(value)) return [];
   const decisions: Decision[] = [];
   for (const raw of value) {
     if (!isRecord(raw)) continue;
     const action = asString(raw.action);
-    const sourceText = asString(raw.sourceText);
-    // Obligatoriska fält + spårbar källa. Annars visas posten inte.
     if (action.length === 0) continue;
-    if (!isGrounded(sourceText, originalText)) continue;
+
+    const sources = collectGroundedSources(raw, originalText);
+    if (sources.length === 0) continue; // ingen spårbar källa → visas inte
 
     const context = asString(raw.context);
     const outcome = asString(raw.outcome);
@@ -79,7 +111,9 @@ function parseDecisions(value: unknown, originalText: string): Decision[] {
       ...(context.length > 0 ? { context } : {}),
       ...(outcome.length > 0 ? { outcome } : {}),
       capabilities: asStringArray(raw.capabilities),
-      sourceText,
+      sources,
+      // En Decision vilar på användarens egna ord. Aldrig verified i v1.
+      kind: "quote",
     });
   }
   return decisions;
@@ -91,10 +125,13 @@ function parseStrengths(value: unknown, originalText: string): GroundedClaim[] {
   for (const raw of value) {
     if (!isRecord(raw)) continue;
     const statement = asString(raw.statement);
-    const sourceText = asString(raw.sourceText);
     if (statement.length === 0) continue;
-    if (!isGrounded(sourceText, originalText)) continue;
-    claims.push({ statement, sourceText });
+
+    const sources = collectGroundedSources(raw, originalText);
+    if (sources.length === 0) continue;
+
+    // Styrkor är AI-tolkningar, aldrig konstateranden.
+    claims.push({ statement, sources, kind: "interpretation" });
   }
   return claims;
 }
@@ -105,10 +142,18 @@ function parseRoles(value: unknown, originalText: string): RoleSuggestion[] {
   for (const raw of value) {
     if (!isRecord(raw)) continue;
     const role = asString(raw.role);
-    const sourceText = asString(raw.sourceText);
     if (role.length === 0) continue;
-    if (!isGrounded(sourceText, originalText)) continue;
-    roles.push({ role, rationale: asString(raw.rationale), sourceText });
+
+    const sources = collectGroundedSources(raw, originalText);
+    if (sources.length === 0) continue;
+
+    // Roller är möjliga riktningar, aldrig konstateranden.
+    roles.push({
+      role,
+      rationale: asString(raw.rationale),
+      sources,
+      kind: "interpretation",
+    });
   }
   return roles;
 }

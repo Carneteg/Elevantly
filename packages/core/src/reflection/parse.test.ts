@@ -5,8 +5,9 @@ import type { AIEngine, RawReflection } from "../ai/engine";
 
 /**
  * Kritisk affärslogik (CLAUDE.md 16): struktureringen av fritext till
- * förankrade beslutsposter. Testerna är deterministiska och kräver ingen
- * riktig AI-motor — de matar in fixtur-JSON precis som en motor skulle svara.
+ * förankrade, ärlighetsmärkta poster. Testerna är deterministiska och kräver
+ * ingen riktig AI-motor — de matar in fixtur-JSON precis som en motor skulle
+ * svara.
  */
 
 const USER_TEXT =
@@ -37,7 +38,7 @@ describe("isGrounded", () => {
 });
 
 describe("parseReflection", () => {
-  it("strukturerar ett giltigt svar till typade, förankrade poster", () => {
+  it("strukturerar ett giltigt svar till typade, förankrade poster med rätt kind", () => {
     const raw: RawReflection = {
       decisions: [
         {
@@ -45,20 +46,20 @@ describe("parseReflection", () => {
           context: "internt produktarbete",
           outcome: "minskade churn med 12 procent",
           capabilities: ["produktutveckling", "dataanalys"],
-          sourceText: "minskade churn med 12 procent",
+          sources: ["minskade churn med 12 procent"],
         },
       ],
       strengths: [
         {
           statement: "Du driver mätbar produktförbättring",
-          sourceText: "minskade churn med 12 procent",
+          sources: ["minskade churn med 12 procent"],
         },
       ],
       roles: [
         {
           role: "Product Manager",
           rationale: "Kombinerar produktbeslut med mätbart utfall",
-          sourceText: "byggde om vårt onboarding-flöde",
+          sources: ["byggde om vårt onboarding-flöde"],
         },
       ],
       followUpQuestion: "Vad var svårast i migreringen?",
@@ -72,36 +73,80 @@ describe("parseReflection", () => {
       context: "internt produktarbete",
       outcome: "minskade churn med 12 procent",
       capabilities: ["produktutveckling", "dataanalys"],
-      sourceText: "minskade churn med 12 procent",
+      sources: ["minskade churn med 12 procent"],
+      kind: "quote",
     });
+
     expect(result.strengths).toHaveLength(1);
+    expect(result.strengths[0]?.kind).toBe("interpretation");
+    expect(result.strengths[0]?.sources).toEqual([
+      "minskade churn med 12 procent",
+    ]);
+
     expect(result.roles).toHaveLength(1);
+    expect(result.roles[0]?.kind).toBe("interpretation");
+
     expect(result.followUpQuestion).toBe("Vad var svårast i migreringen?");
   });
 
-  it("filtrerar bort en decision vars sourceText inte finns i texten", () => {
+  it("stödjer flera källor och släpper de som inte är förankrade", () => {
     const raw: RawReflection = {
       decisions: [
         {
-          action: "Lanserade en helt ny betaltjänst",
-          capabilities: ["fintech"],
-          sourceText: "lanserade en betaltjänst som tog 40% marknadsandel",
+          action: "Ledde ett team genom en migrering",
+          capabilities: ["ledarskap"],
+          sources: [
+            "ledde också ett team på fyra personer", // förankrad
+            "genom en stökig migrering", // förankrad
+            "på rekordtid utan buggar", // finns INTE i texten → släpps
+          ],
+        },
+      ],
+    };
+
+    const decision = parseReflection(raw, USER_TEXT).decisions[0];
+    expect(decision).toBeDefined();
+    expect(decision?.sources).toEqual([
+      "ledde också ett team på fyra personer",
+      "genom en stökig migrering",
+    ]);
+  });
+
+  it("stödjer bakåtkompatibelt enkelt sourceText-fält", () => {
+    const raw: RawReflection = {
+      strengths: [
+        {
+          statement: "Du är bra på ledarskap",
+          sourceText: "ledde också ett team på fyra personer",
         },
       ],
     };
 
     const result = parseReflection(raw, USER_TEXT);
-    expect(result.decisions).toHaveLength(0);
+    expect(result.strengths).toHaveLength(1);
+    expect(result.strengths[0]?.sources).toEqual([
+      "ledde också ett team på fyra personer",
+    ]);
+    expect(result.strengths[0]?.kind).toBe("interpretation");
   });
 
-  it("filtrerar bort en decision utan sourceText (ingen spårbar källa)", () => {
+  it("filtrerar bort en interpretation vars enda källa inte finns i texten", () => {
+    const raw: RawReflection = {
+      strengths: [
+        {
+          statement: "Du är en visionär strateg",
+          sources: ["byggde en tioårig strategi"],
+        },
+      ],
+    };
+
+    expect(parseReflection(raw, USER_TEXT).strengths).toHaveLength(0);
+  });
+
+  it("filtrerar bort en decision helt utan källor (ingen spårbar grund)", () => {
     const raw: RawReflection = {
       decisions: [
-        {
-          action: "Ledde ett team",
-          capabilities: ["ledarskap"],
-          sourceText: "",
-        },
+        { action: "Ledde ett team", capabilities: ["ledarskap"], sources: [] },
       ],
     };
 
@@ -114,7 +159,7 @@ describe("parseReflection", () => {
         {
           action: "",
           capabilities: ["ledarskap"],
-          sourceText: "ledde också ett team på fyra personer",
+          sources: ["ledde också ett team på fyra personer"],
         },
       ],
     };
@@ -128,7 +173,7 @@ describe("parseReflection", () => {
         {
           action: "Ledde en migrering",
           capabilities: ["ledarskap", "  ledarskap ", "", "migrering"],
-          sourceText: "ledde också ett team på fyra personer",
+          sources: ["ledde också ett team på fyra personer"],
         },
       ],
     };
@@ -141,37 +186,42 @@ describe("parseReflection", () => {
     expect(decision?.capabilities).toEqual(["ledarskap", "migrering"]);
   });
 
-  it("underkänner en förankrad strength men behåller inte en oförankrad", () => {
-    const raw: RawReflection = {
-      strengths: [
-        {
-          statement: "Du är bra på ledarskap",
-          sourceText: "ledde också ett team på fyra personer",
-        },
-        {
-          statement: "Du är en visionär strateg",
-          sourceText: "byggde en tioårig strategi",
-        },
-      ],
-    };
-
-    const result = parseReflection(raw, USER_TEXT);
-    expect(result.strengths).toHaveLength(1);
-    expect(result.strengths[0]?.statement).toBe("Du är bra på ledarskap");
-  });
-
-  it("kräver förankrat sourceText även för roller", () => {
+  it("kräver förankrad källa även för roller", () => {
     const raw: RawReflection = {
       roles: [
         {
           role: "CTO",
           rationale: "byggde hela plattformen",
-          sourceText: "byggde hela plattformen själv på en helg",
+          sources: ["byggde hela plattformen själv på en helg"],
         },
       ],
     };
 
     expect(parseReflection(raw, USER_TEXT).roles).toHaveLength(0);
+  });
+
+  it("låter aldrig motorn hitta på ett kind — det sätts deterministiskt", () => {
+    const raw: RawReflection = {
+      decisions: [
+        {
+          action: "Ledde en migrering",
+          capabilities: [],
+          sources: ["ledde också ett team på fyra personer"],
+          kind: "verified", // motorns försök att flagga som verifierat ignoreras
+        },
+      ],
+      strengths: [
+        {
+          statement: "Du är bra på ledarskap",
+          sources: ["ledde också ett team på fyra personer"],
+          kind: "verified",
+        },
+      ],
+    };
+
+    const result = parseReflection(raw, USER_TEXT);
+    expect(result.decisions[0]?.kind).toBe("quote");
+    expect(result.strengths[0]?.kind).toBe("interpretation");
   });
 
   it("ger en default-uppföljningsfråga när motorn inte gav någon", () => {
@@ -200,12 +250,12 @@ describe("runReflection", () => {
             {
               action: "Ledde en migrering",
               capabilities: ["ledarskap"],
-              sourceText: "ledde också ett team på fyra personer",
+              sources: ["ledde också ett team på fyra personer"],
             },
             {
               action: "Påhittad handling",
               capabilities: [],
-              sourceText: "detta står inte i texten",
+              sources: ["detta står inte i texten"],
             },
           ],
           followUpQuestion: "Berätta mer om migreringen?",
@@ -217,6 +267,7 @@ describe("runReflection", () => {
     // Den oförankrade posten filtreras bort av produktlogiken, inte av motorn.
     expect(result.decisions).toHaveLength(1);
     expect(result.decisions[0]?.action).toBe("Ledde en migrering");
+    expect(result.decisions[0]?.kind).toBe("quote");
     expect(result.followUpQuestion).toBe("Berätta mer om migreringen?");
   });
 });

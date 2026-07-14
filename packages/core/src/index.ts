@@ -5,7 +5,7 @@
  */
 
 // Datamodell
-export type { Decision } from "./decision";
+export type { ClaimKind, Decision } from "./decision";
 export type {
   GroundedClaim,
   Reflection,

@@ -1,9 +1,12 @@
 import type { Reflection } from "@elevantly/core";
-import { Grounded } from "./Grounded";
+import { Sources } from "./Sources";
 
 /**
  * Presentation av Spegelns svar. Ren och tillståndslös — all logik och
  * förankringsvalidering har redan skett i @elevantly/core.
+ *
+ * Ärlighet är designkravet här: beslut vilar på användarens egna ord, medan
+ * styrkor och riktningar är AI-tolkningar och får aldrig se ut som fakta.
  */
 export function ReflectionView({ reflection }: { reflection: Reflection }) {
   const { decisions, strengths, roles, followUpQuestion } = reflection;
@@ -19,39 +22,6 @@ export function ReflectionView({ reflection }: { reflection: Reflection }) {
         </p>
       ) : (
         <>
-          {strengths.length > 0 && (
-            <Section title="Vad det säger om vad du är bra på">
-              <ul className="flex flex-col gap-6">
-                {strengths.map((claim, i) => (
-                  <li key={i}>
-                    <p className="text-lg leading-snug">{claim.statement}</p>
-                    <Grounded sourceText={claim.sourceText} />
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-
-          {roles.length > 0 && (
-            <Section title="Roller det pekar mot">
-              <ul className="flex flex-col gap-6">
-                {roles.map((role, i) => (
-                  <li key={i}>
-                    <p className="text-lg font-medium leading-snug">
-                      {role.role}
-                    </p>
-                    {role.rationale && (
-                      <p className="mt-1 text-[var(--color-muted)]">
-                        {role.rationale}
-                      </p>
-                    )}
-                    <Grounded sourceText={role.sourceText} />
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-
           {decisions.length > 0 && (
             <Section title="Besluten jag läste ut">
               <ul className="flex flex-col gap-6">
@@ -75,18 +45,59 @@ export function ReflectionView({ reflection }: { reflection: Reflection }) {
                       </p>
                     )}
                     {decision.capabilities.length > 0 && (
-                      <ul className="mt-3 flex flex-wrap gap-2">
-                        {decision.capabilities.map((cap, j) => (
-                          <li
-                            key={j}
-                            className="rounded-full border border-[var(--color-line)] px-3 py-1 text-sm text-[var(--color-muted)]"
-                          >
-                            {cap}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="mt-3">
+                        <p className="text-sm text-[var(--color-muted)]">
+                          Kompetenser detta kan peka på:
+                        </p>
+                        <ul className="mt-2 flex flex-wrap gap-2">
+                          {decision.capabilities.map((cap, j) => (
+                            <li
+                              key={j}
+                              className="rounded-full border border-[var(--color-line)] px-3 py-1 text-sm text-[var(--color-muted)]"
+                            >
+                              {cap}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
-                    <Grounded sourceText={decision.sourceText} />
+                    <Sources kind={decision.kind} sources={decision.sources} />
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {strengths.length > 0 && (
+            <Section title="Vad det kan säga om vad du är bra på">
+              <ul className="flex flex-col gap-6">
+                {strengths.map((claim, i) => (
+                  <li key={i}>
+                    <p className="text-lg leading-snug">{claim.statement}</p>
+                    <Sources kind={claim.kind} sources={claim.sources} />
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {roles.length > 0 && (
+            <Section title="Möjliga riktningar">
+              <ul className="flex flex-col gap-6">
+                {roles.map((role, i) => (
+                  <li key={i}>
+                    <p className="text-lg leading-snug">
+                      <span className="text-[var(--color-muted)]">
+                        Möjlig riktning:{" "}
+                      </span>
+                      <span className="font-medium">{role.role}</span>
+                    </p>
+                    {role.rationale && (
+                      <p className="mt-1 text-[var(--color-muted)]">
+                        {role.rationale}
+                      </p>
+                    )}
+                    <Sources kind={role.kind} sources={role.sources} />
                   </li>
                 ))}
               </ul>

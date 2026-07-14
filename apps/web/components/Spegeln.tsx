@@ -64,13 +64,20 @@ export function Spegeln() {
         placeholder={PLACEHOLDER}
         rows={7}
         aria-label="Beskriv vad du gjort i jobbet"
+        aria-describedby="privacy-note"
         className="w-full resize-y rounded-2xl border border-[var(--color-line)] bg-white p-5 text-lg leading-relaxed outline-none transition focus:border-[var(--color-ink)]"
       />
 
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <p className="text-sm text-[var(--color-muted)]">
-          Din text skickas till AI-motorn för att struktureras och sparas inte.
-        </p>
+      {/* Tydlig, ärlig integritetstext nära rutan (GDPR, informerat samtycke). */}
+      <p id="privacy-note" className="mt-3 text-sm text-[var(--color-muted)]">
+        Din text skickas till vår AI-leverantör för att skapa analysen.
+        Elevantly sparar den inte i denna version.{" "}
+        <span className="text-[var(--color-ink)]">
+          Undvik känsliga personuppgifter om dig själv eller andra.
+        </span>
+      </p>
+
+      <div className="mt-4 flex justify-end">
         <button
           type="button"
           onClick={handleSubmit}

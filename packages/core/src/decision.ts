@@ -1,4 +1,18 @@
 /**
+ * Hur en rad ska förstås av användaren — en ärlighetsmarkör som styr hur den
+ * får presenteras. Vi får aldrig låta en tolkning kännas mer verifierad än den
+ * är; datatillit är hela poängen (CLAUDE.md 8.3).
+ *
+ * - `quote`         Vilar på användarens egna ord (ordagrant citat i texten).
+ *                   Det närmaste ett konstaterande vi kommer i v1.
+ * - `interpretation` AI:ns tolkning härledd FRÅN ett citat (styrkor, riktningar).
+ *                   Visas aldrig som fakta, alltid som tolkning.
+ * - `verified`      Reserverad. ANVÄNDS INTE i v1 — finns bara för framtiden
+ *                   (t.ex. när ett utfall kan styrkas mot en extern källa).
+ */
+export type ClaimKind = "quote" | "interpretation" | "verified";
+
+/**
  * Decision — Elevantlys grundenhet (CLAUDE.md 7.2: beslut & utfall framför titlar).
  *
  * En Decision är ett bevisat beslut/handling som personen faktiskt gjort.
@@ -16,12 +30,19 @@ export interface Decision {
   context?: string;
   /** Mätbart utfall om det finns ("minskade churn 12%"). Valfri. */
   outcome?: string;
-  /** Kompetenser handlingen visar. Kan vara tom. */
+  /** Kompetenser handlingen kan peka på (AI-inferens, inte konstaterande). */
   capabilities: string[];
   /**
-   * Exakt textutdrag ur användarens input som posten härleds från.
-   * Obligatorisk — driver förankringen ("Grundat på: ..."). Utan spårbar
-   * källa visas posten aldrig (CLAUDE.md 8.3).
+   * Ordagranna textutdrag ur användarens input som posten vilar på. Minst ett —
+   * driver förankringen ("Du skrev: ..."). Utan minst en spårbar källa visas
+   * posten aldrig (CLAUDE.md 8.3). Flera tillåts när posten bygger på mer än
+   * en handling.
    */
-  sourceText: string;
+  sources: string[];
+  /**
+   * Ärlighetsmarkör. En Decision vilar på användarens egna ord → `quote`.
+   * Sätts deterministiskt av produktlogiken, aldrig av AI-motorn. Aldrig
+   * `verified` i v1.
+   */
+  kind: ClaimKind;
 }
