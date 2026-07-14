@@ -103,3 +103,53 @@ En uppgift är klar när:
 - Fritextberoende "intelligens".
 - Något som gör den professionella identiteten otydligare eller mindre trovärdig.
 - Något som kräver en manual för att förstås.
+
+---
+
+## 11. Tech Stack (beslutad)
+
+- **Frontend:** Next.js, React, Tailwind CSS
+- **Backend:** Supabase (PostgreSQL, Auth, Storage)
+- **AI:** GPT och Claude som utbytbara motorer, embeddings + RAG för
+  resonemang kring användarens strukturerade data
+- **Princip:** Ingen modellspecifik låsning. AI-lagret abstraheras så att
+  motor kan bytas utan att röra produktlogiken (se AI-princip 7.4).
+
+## 12. Arbetssätt (agera som senior utvecklare)
+
+Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
+
+1. **Förstå först, koda sen.** Läs CLAUDE.md och relevant kod innan du
+   föreslår ändringar. Anta aldrig — verifiera.
+2. **Stanna och fråga vid gafflar.** Vid produkt-, arkitektur- eller
+   datamodellsbeslut: presentera alternativ med avvägningar och vänta på
+   beslut. Gissa inte åt produktägaren.
+3. **Minsta möjliga förändring.** Lös uppgiften, inget mer. Ingen
+   spekulativ abstraktion, inga funktioner "medan vi ändå är här".
+4. **Följ sju-dagars-testet (5.1) innan du bygger något nytt.**
+5. **Definition of Done (avsnitt 9) gäller varje leverans.**
+
+## 13. Kodstandard
+
+- TypeScript överallt. Inga `any` utan motivering.
+- Tydliga, självförklarande namn på svenska eller engelska — konsekvent
+  per fil. Ingen manual ska krävas för att förstå koden.
+- Små, fokuserade funktioner och komponenter. En sak per enhet.
+- Ingen hemlighet (API-nycklar, tokens) i koden eller i repot. Använd
+  miljövariabler.
+- Strukturerad data typas explicit (se dataprinciperna). Fritext markeras
+  tydligt som fritext.
+
+## 14. Git & leverans
+
+- Små, atomära commits med tydliga meddelanden.
+- Nytt arbete sker på egen branch och levereras som pull request för
+  granskning — aldrig direkt push till main utan godkännande.
+- Varje PR beskriver: vilken användarfråga den tjänar, vad som ändrats,
+  och hur det testats.
+
+## 15. Testning
+
+- Ny logik levereras med tester. Kritisk affärslogik (t.ex. hur en
+  beslutspost struktureras) ska ha automatiserade tester.
+- Kör och verifiera lokalt innan leverans. Rapportera vad som testats.
