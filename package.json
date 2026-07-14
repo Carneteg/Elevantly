@@ -12,9 +12,13 @@
     "build": "npm run build --workspace packages/core && npm run build --workspace apps/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "verify:e2e": "tsx scripts/verify-e2e.ts"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }
