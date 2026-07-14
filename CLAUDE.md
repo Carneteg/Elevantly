@@ -32,7 +32,22 @@ Elevantly är ett **produktprojekt**. AI är motorn, inte produkten.
   väger avgörs det av användarvärde och produktprincip — aldrig av vad som
   är tekniskt lockande eller vad modellen "vill".
 
-## 4. Designfilosofi
+## 4. Mindset (Steve Jobs-standarden)
+
+Allt vi bygger ska hålla en Steve Jobs-standard — inte som imitation, utan
+som kravnivå:
+
+- **Enkelhet är slutresultatet av hårt arbete, inte av lathet.** Det enkla
+  är det svåra. Vi gömmer komplexiteten från användaren och bär den själva.
+- **Genialitet ligger i att säga nej.** Produkten definieras lika mycket av
+  vad vi väljer bort som av vad vi bygger. Fokus är en funktion.
+- **Smak och detaljer är inte pynt.** Kvaliteten på det användaren inte ser
+  avgör kvaliteten på det de känner. Ingen detalj är för liten.
+- **Vi startar i användarupplevelsen och arbetar bakåt till tekniken** —
+  aldrig tvärtom.
+- **"Bra nog" är inte bra nog.** Om något bara är okej, är det inte klart.
+
+## 5. Designfilosofi
 
 - **Steve Jobs simplicity.** Om en funktion kräver en manual är den fel
   designad. Enkelhet är ett krav, inte en ambition.
@@ -41,7 +56,7 @@ Elevantly är ett **produktprojekt**. AI är motorn, inte produkten.
 - Varje skärm ska ha ett tydligt svar på: "Vad är det enda viktigaste
   användaren ska göra eller förstå här?"
 
-## 5. Produktprinciper
+## 6. Produktprinciper
 
 1. Varje funktion måste besvara: **"Vilket konkret värde får användaren av
    detta inom de kommande sju dagarna?"** Om svaret är "inget" — bygg den inte.
@@ -52,7 +67,7 @@ Elevantly är ett **produktprojekt**. AI är motorn, inte produkten.
 4. Ingen funktion får göra användarens professionella identitet otydligare,
    mindre trovärdig eller mindre värdefull.
 
-## 6. Dataprinciper
+## 7. Dataprinciper
 
 1. **Vi samlar aldrig data för datans skull.** Varje datapunkt måste ha en
    namngiven **användarfråga** den besvarar. Ingen användarfråga → ingen
@@ -68,7 +83,7 @@ Elevantly är ett **produktprojekt**. AI är motorn, inte produkten.
    i bakgrunden. Vi bygger aldrig ett formulär så stelt att ingen orkar fylla
    i det, men vi låter aldrig ostrukturerad text bli det som driver systemet.
 
-## 7. AI-principer
+## 8. AI-principer
 
 1. AI är en motor i tjänst av produkten och användaren.
 2. AI får **föreslå, strukturera, resonera och prioritera**. AI får **inte**
@@ -78,24 +93,24 @@ Elevantly är ett **produktprojekt**. AI är motorn, inte produkten.
 4. Modeller är utbytbara. Ingen princip i detta dokument får bero på en
    specifik leverantör.
 
-## 8. GDPR & Compliance (Privacy by Design)
+## 9. GDPR & Compliance (Privacy by Design)
 
 1. Privacy by Design och dataminimering gäller från första raden kod.
 2. Användaren äger sin data, ska kunna se den, exportera den och radera den.
 3. Samtycke är specifikt och informerat — aldrig förkryssat, aldrig framtvingat.
-4. Vi lagrar aldrig mer än vad principen i 6.1 tillåter.
+4. Vi lagrar aldrig mer än vad principen i 7.1 tillåter.
 
-## 9. Definition of Done
+## 10. Definition of Done
 
 En uppgift är klar när:
-- [ ] Den svarar på en namngiven användarfråga (koppling till 5.1 / 6.1).
+- [ ] Den svarar på en namngiven användarfråga (koppling till 6.1 / 7.1).
 - [ ] Den följer designfilosofin (ingen manual krävs).
 - [ ] Data den rör är strukturerad enligt dataprinciperna.
 - [ ] Den bryter inte mot någon punkt i "Detta bygger vi aldrig".
 - [ ] Privacy/GDPR-konsekvensen är genomtänkt.
 - [ ] Den är testad och begriplig för nästa person/agent som öppnar koden.
 
-## 10. Detta bygger vi ALDRIG
+## 11. Detta bygger vi ALDRIG
 
 - Ett flöde, likes, följare, stories eller innehållskonkurrens.
 - Funktioner vars värde kräver att *någon annan* agerar.
@@ -106,16 +121,16 @@ En uppgift är klar när:
 
 ---
 
-## 11. Tech Stack (beslutad)
+## 12. Tech Stack (beslutad)
 
 - **Frontend:** Next.js, React, Tailwind CSS
 - **Backend:** Supabase (PostgreSQL, Auth, Storage)
 - **AI:** GPT och Claude som utbytbara motorer, embeddings + RAG för
   resonemang kring användarens strukturerade data
 - **Princip:** Ingen modellspecifik låsning. AI-lagret abstraheras så att
-  motor kan bytas utan att röra produktlogiken (se AI-princip 7.4).
+  motor kan bytas utan att röra produktlogiken (se AI-princip 8.4).
 
-## 12. Arbetssätt (agera som senior utvecklare)
+## 13. Arbetssätt (agera som senior utvecklare)
 
 Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
 
@@ -126,10 +141,10 @@ Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
    beslut. Gissa inte åt produktägaren.
 3. **Minsta möjliga förändring.** Lös uppgiften, inget mer. Ingen
    spekulativ abstraktion, inga funktioner "medan vi ändå är här".
-4. **Följ sju-dagars-testet (5.1) innan du bygger något nytt.**
-5. **Definition of Done (avsnitt 9) gäller varje leverans.**
+4. **Följ sju-dagars-testet (6.1) innan du bygger något nytt.**
+5. **Definition of Done (avsnitt 10) gäller varje leverans.**
 
-## 13. Kodstandard
+## 14. Kodstandard
 
 - TypeScript överallt. Inga `any` utan motivering.
 - Tydliga, självförklarande namn på svenska eller engelska — konsekvent
@@ -140,7 +155,7 @@ Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
 - Strukturerad data typas explicit (se dataprinciperna). Fritext markeras
   tydligt som fritext.
 
-## 14. Git & leverans
+## 15. Git & leverans
 
 - Små, atomära commits med tydliga meddelanden.
 - Nytt arbete sker på egen branch och levereras som pull request för
@@ -148,7 +163,7 @@ Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
 - Varje PR beskriver: vilken användarfråga den tjänar, vad som ändrats,
   och hur det testats.
 
-## 15. Testning
+## 16. Testning
 
 - Ny logik levereras med tester. Kritisk affärslogik (t.ex. hur en
   beslutspost struktureras) ska ha automatiserade tester.
