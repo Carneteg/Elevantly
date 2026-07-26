@@ -96,3 +96,16 @@ export {
   orderFeed,
   MAX_POST_LENGTH,
 } from "./feed/post";
+
+// Meddelanden: det privata 1:1-lagret (utbytbart lager — in-memory + Supabase)
+export { InMemoryMessageRepository } from "./messaging/inMemoryMessageRepository";
+export { SupabaseMessageRepository } from "./messaging/supabaseMessageRepository";
+export type { MessageRepository } from "./messaging/messageRepository";
+export type { Message } from "./messaging/message";
+export {
+  isValidMessageBody,
+  normalizeMessageBody,
+  orderThread,
+  involvesBoth,
+  MAX_MESSAGE_LENGTH,
+} from "./messaging/message";

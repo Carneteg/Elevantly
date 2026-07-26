@@ -70,9 +70,14 @@ till.
   lågfriktions-kompositor. Inga mörka mönster, ingen doomscroll-optimering (§11).
 - Senare: koppla inlägg till en `Decision` för grundade inlägg; rikare relevans.
 
-### 4. Meddelanden
+### 4. Meddelanden — 🔜 *pågår*
 **Användarfråga:** *"Kan jag ta ett samtal med rätt person?"*
-- Direkt kommunikation mellan kontakter.
+- Direkt 1:1-kommunikation mellan accepterade kontakter.
+- Byggt: `Message`-modell + ren logik (`orderThread`, `involvesBoth`, validering),
+  `MessageRepository` (in-memory + Supabase), migration `0005` (RLS: bara parterna
+  ser; skicka bara till accepterad kontakt; tabellen i realtidspubliceringen).
+  `/messages` (samtal = kontakter), `/messages/[handle]` (live tråd via Supabase
+  Realtime + kompositor), "Meddela" på kontakter. Strikt privat (§9).
 
 ### 5. Möjligheter
 **Användarfråga:** *"Vilka roller/samarbeten passar det jag faktiskt gjort?"*

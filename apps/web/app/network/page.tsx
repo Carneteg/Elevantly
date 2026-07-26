@@ -114,7 +114,17 @@ export default async function NetworkPage() {
                 className="flex items-center justify-between gap-4 rounded-xl border border-[var(--color-line)] bg-white/50 p-4"
               >
                 <EntryIdentity entry={entry} />
-                <ConnectionActions userId={entry.userId} kind="contact" />
+                <div className="flex items-center gap-3">
+                  {entry.summary && (
+                    <a
+                      href={`/messages/${entry.summary.handle}`}
+                      className="rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:border-[var(--color-ink)]"
+                    >
+                      Meddela
+                    </a>
+                  )}
+                  <ConnectionActions userId={entry.userId} kind="contact" />
+                </div>
               </li>
             ))}
           </ul>
