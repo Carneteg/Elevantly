@@ -84,3 +84,15 @@ export {
   isParty,
   otherParty,
 } from "./connections/connection";
+
+// Flöde: det professionella innehållslagret (utbytbart lager — in-memory + Supabase)
+export { InMemoryPostRepository } from "./feed/inMemoryPostRepository";
+export { SupabasePostRepository } from "./feed/supabasePostRepository";
+export type { PostRepository } from "./feed/postRepository";
+export type { Post } from "./feed/post";
+export {
+  isValidPostBody,
+  normalizePostBody,
+  orderFeed,
+  MAX_POST_LENGTH,
+} from "./feed/post";

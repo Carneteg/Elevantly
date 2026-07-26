@@ -30,6 +30,7 @@ export function MainNav({
   const items: NavItem[] = signedIn
     ? [
         { href: "/", label: "Hem", icon: <HomeIcon /> },
+        { href: "/feed", label: "Flöde", icon: <FeedIcon /> },
         { href: "/network", label: "Nätverk", icon: <NetworkIcon /> },
       ]
     : [{ href: "/", label: "Hem", icon: <HomeIcon /> }];
@@ -195,6 +196,15 @@ function HomeIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 10.5 12 3l9 7.5" />
       <path d="M5 9.5V21h14V9.5" />
+    </svg>
+  );
+}
+
+function FeedIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7 8h10M7 12h10M7 16h6" />
     </svg>
   );
 }

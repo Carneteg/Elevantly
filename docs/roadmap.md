@@ -61,11 +61,14 @@ till.
 - **Avgränsning v1:** kopplingar sker via offentliga profiler (du ansluter från
   någons `/u/handle`). "Privat-men-anslutningsbar" är ett senare beslut.
 
-### 3. Professionellt flöde
+### 3. Professionellt flöde — 🔜 *pågår*
 **Användarfråga:** *"Vad händer i mitt nätverk som är värt min tid?"*
-- Dela uppdateringar/insikter; se relevant innehåll från nätverket.
-- **Förklarbar rankning** som tjänar professionellt värde, inte enbart
-  engagemang (CLAUDE.md 8.5). Inga mörka mönster (CLAUDE.md 11).
+- Dela uppdateringar/insikter; se innehåll från dina accepterade kontakter.
+- Byggt: `Post`-modell + ren, **förklarbar ordning** (`orderFeed`, kronologisk
+  nyast först — CLAUDE.md 8.5), `PostRepository` (in-memory + Supabase), migration
+  `0004` (RLS: syns för författaren + accepterade kontakter), `/feed` med
+  lågfriktions-kompositor. Inga mörka mönster, ingen doomscroll-optimering (§11).
+- Senare: koppla inlägg till en `Decision` för grundade inlägg; rikare relevans.
 
 ### 4. Meddelanden
 **Användarfråga:** *"Kan jag ta ett samtal med rätt person?"*
