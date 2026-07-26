@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import {
-  ClaudeEngine,
+  createEngine,
   EngineError,
   InMemoryRateLimiter,
   runReflection,
 } from "@elevantly/core";
-import type { RateLimiter, Reflection } from "@elevantly/core";
+import type { AIProvider, RateLimiter, Reflection } from "@elevantly/core";
 
 /**
  * Server-route för Spegeln. Här — och bara här — läses API-nyckeln ur miljön;
@@ -72,15 +72,19 @@ export async function POST(
     return jsonError("Texten är lite för lång — korta ner den.", 400);
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  // Motorval ur miljön (OpenAI/Claude). Nyckeln lämnar aldrig servern.
+  let engine;
+  try {
+    engine = createEngine({
+      provider: normalizeProvider(process.env.AI_PROVIDER),
+      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+      anthropicModel: process.env.ANTHROPIC_MODEL || undefined,
+      openaiApiKey: process.env.OPENAI_API_KEY,
+      openaiModel: process.env.OPENAI_MODEL || undefined,
+    }).engine;
+  } catch {
     return jsonError("AI-motorn är inte konfigurerad.", 503);
   }
-
-  const engine = new ClaudeEngine({
-    apiKey,
-    model: process.env.ANTHROPIC_MODEL || undefined,
-  });
 
   try {
     const reflection = await runReflection(engine, text);
@@ -109,6 +113,11 @@ function getClientIp(request: Request): string {
     if (first) return first;
   }
   return request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+/** Tolkar AI_PROVIDER; okänt/tomt värde → undefined (låt nyckeln avgöra). */
+function normalizeProvider(value: string | undefined): AIProvider | undefined {
+  return value === "openai" || value === "claude" ? value : undefined;
 }
 
 function jsonError(
