@@ -12,25 +12,27 @@
  *
  * Kör:  ANTHROPIC_API_KEY=sk-... npm run verify:e2e
  */
-import {
-  ClaudeEngine,
-  DEFAULT_CLAUDE_MODEL,
-  isGrounded,
-  runReflection,
-} from "@elevantly/core";
+import { createEngine, isGrounded, runReflection } from "@elevantly/core";
 import type {
+  AIProvider,
   CapabilityClaim,
   Reflection,
+  ResolvedEngine,
   ResponsibilityLevel,
 } from "@elevantly/core";
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
-if (!apiKey) {
+/** Tolkar AI_PROVIDER; okänt/tomt värde → undefined (låt nyckeln avgöra). */
+function normalizeProvider(value: string | undefined): AIProvider | undefined {
+  return value === "openai" || value === "claude" ? value : undefined;
+}
+
+if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
   console.error(
     [
-      "✖ ANTHROPIC_API_KEY saknas.",
+      "✖ Ingen AI-nyckel i miljön.",
       "",
-      "  Sätt den i miljön och kör igen:",
+      "  Sätt en av dessa och kör igen:",
+      "      export OPENAI_API_KEY=sk-...      # eller",
       "      export ANTHROPIC_API_KEY=sk-...",
       "      npm run verify:e2e",
       "",
@@ -40,7 +42,19 @@ if (!apiKey) {
   process.exit(1);
 }
 
-const model = process.env.ANTHROPIC_MODEL || DEFAULT_CLAUDE_MODEL;
+let resolved: ResolvedEngine;
+try {
+  resolved = createEngine({
+    provider: normalizeProvider(process.env.AI_PROVIDER),
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+    anthropicModel: process.env.ANTHROPIC_MODEL || undefined,
+    openaiApiKey: process.env.OPENAI_API_KEY,
+    openaiModel: process.env.OPENAI_MODEL || undefined,
+  });
+} catch (error) {
+  console.error(`✖ ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}
 
 /** Ansvarsnivåer rangordnade; "unknown" = inget stöd (lägst). */
 const RESPONSIBILITY_RANK: Record<ResponsibilityLevel, number> = {
@@ -214,12 +228,11 @@ function checkInvariants(example: Example, reflection: Reflection): string[] {
 }
 
 async function main(): Promise<void> {
-  console.log("Spegeln — end-to-end-verifiering mot skarp Claude-motor");
-  console.log(`Modell: ${model}`);
+  console.log("Spegeln — end-to-end-verifiering mot skarp AI-motor");
+  console.log(`Motor: ${resolved.provider} | modell: ${resolved.model}`);
   console.log("(riktiga API-anrop — detta kostar pengar)\n");
 
-  // Garanterat satt: guarden överst avbryter annars processen.
-  const engine = new ClaudeEngine({ apiKey: apiKey as string, model });
+  const engine = resolved.engine;
   const allFailures: string[] = [];
 
   for (const example of EXAMPLES) {

@@ -12,6 +12,7 @@ import { POST } from "./route";
 
 beforeAll(() => {
   delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.OPENAI_API_KEY;
 });
 
 function post(body: unknown, ip: string): Request {
@@ -39,9 +40,11 @@ describe("POST /api/reflect — hårda gränser", () => {
     expect(res.status).toBe(400);
   });
 
-  it("släpper igenom en förfrågan under gränsen (ej 429)", async () => {
+  it("returnerar 503 när ingen motor är konfigurerad (varken OpenAI eller Claude)", async () => {
     const res = await POST(post({ text: "Jag ledde ett team." }, "10.0.0.3"));
-    expect(res.status).not.toBe(429);
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toMatch(/inte konfigurerad/i);
   });
 
   it("slår in rate limit med 429 och Retry-After efter tröskeln", async () => {

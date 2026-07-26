@@ -26,12 +26,17 @@ export type {
 } from "./ai/engine";
 export { buildReflectionPrompt } from "./ai/prompt";
 export type { ReflectionPrompt } from "./ai/prompt";
-export {
-  ClaudeEngine,
-  DEFAULT_CLAUDE_MODEL,
-  EngineError,
-} from "./ai/claudeEngine";
+export { EngineError } from "./ai/errors";
+export { ClaudeEngine, DEFAULT_CLAUDE_MODEL } from "./ai/claudeEngine";
 export type { ClaudeEngineOptions } from "./ai/claudeEngine";
+export { GptEngine, DEFAULT_OPENAI_MODEL } from "./ai/gptEngine";
+export type { GptEngineOptions } from "./ai/gptEngine";
+export { createEngine } from "./ai/createEngine";
+export type {
+  AIProvider,
+  EngineConfig,
+  ResolvedEngine,
+} from "./ai/createEngine";
 
 // Produktlogik
 export { parseReflection, isGrounded, PARSE_LIMITS } from "./reflection/parse";

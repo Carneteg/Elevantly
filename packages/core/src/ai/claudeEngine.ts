@@ -1,12 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AIEngine, RawReflection, ReflectionInput } from "./engine";
 import { buildReflectionPrompt } from "./prompt";
+import { EngineError } from "./errors";
+import { extractJsonObject } from "./json";
 
 /**
  * Claude-implementationen av AIEngine (motor #1 i Spegeln v1).
  * Ingen nyckel läses här ur miljön — den skickas in explicit, så core förblir
  * portabelt (webb-lagret ansvarar för att läsa env och hålla nyckeln
- * server-side). En framtida GptEngine implementerar samma interface.
+ * server-side). GptEngine implementerar samma interface för OpenAI.
  */
 
 /** Förnuftig standardmodell om ingen anges. Utbytbar via options/env. */
@@ -18,14 +20,6 @@ export interface ClaudeEngineOptions {
   model?: string;
   /** Valfri klient-injektion — främst för test. */
   client?: Anthropic;
-}
-
-/** Kastas när motorn inte kan producera ett tolkbart svar. */
-export class EngineError extends Error {
-  constructor(message: string, options?: { cause?: unknown }) {
-    super(message, options);
-    this.name = "EngineError";
-  }
 }
 
 export class ClaudeEngine implements AIEngine {
@@ -56,7 +50,7 @@ export class ClaudeEngine implements AIEngine {
       throw new EngineError("Kunde inte nå AI-motorn.", { cause });
     }
 
-    return parseJsonResponse(extractText(message));
+    return extractJsonObject(extractText(message));
   }
 }
 
@@ -69,31 +63,4 @@ function extractText(message: Anthropic.Message): string {
     .map((block) => block.text)
     .join("")
     .trim();
-}
-
-/**
- * Tolkar modellens JSON robust: tål ev. kodstaket och strö-text runt objektet
- * genom att plocka ut första `{` … sista `}`. Misslyckad tolkning → EngineError.
- * (Förankringsvalidering sker separat i parseReflection.)
- */
-function parseJsonResponse(text: string): RawReflection {
-  const withoutFences = text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim();
-
-  const start = withoutFences.indexOf("{");
-  const end = withoutFences.lastIndexOf("}");
-  const candidate =
-    start !== -1 && end !== -1 && end > start
-      ? withoutFences.slice(start, end + 1)
-      : withoutFences;
-
-  try {
-    return JSON.parse(candidate) as RawReflection;
-  } catch (cause) {
-    throw new EngineError("AI-motorn svarade inte med giltig JSON.", {
-      cause,
-    });
-  }
 }
