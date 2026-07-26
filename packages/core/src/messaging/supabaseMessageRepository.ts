@@ -73,6 +73,18 @@ export class SupabaseMessageRepository implements MessageRepository {
     if (error) throw new Error(`Kunde inte läsa konversationen: ${error.message}`);
     return (data ?? []).map(rowToMessage);
   }
+
+  async listAllForUser(userId: string): Promise<Message[]> {
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(COLUMNS)
+      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+      .order("created_at", { ascending: true })
+      .returns<MessageRow[]>();
+
+    if (error) throw new Error(`Kunde inte läsa meddelanden: ${error.message}`);
+    return (data ?? []).map(rowToMessage);
+  }
 }
 
 function rowToMessage(row: MessageRow): Message {

@@ -80,6 +80,10 @@ export class InMemoryConnectionRepository implements ConnectionRepository {
       .filter((c) => c.status === "pending" && c.addresseeId === userId)
       .map(clone);
   }
+
+  async listAllForUser(userId: string): Promise<Connection[]> {
+    return this.connections.filter((c) => isParty(c, userId)).map(clone);
+  }
 }
 
 function clone(connection: Connection): Connection {

@@ -54,4 +54,12 @@ export class InMemoryMessageRepository implements MessageRepository {
       .slice(-limit)
       .map((m) => ({ ...m }));
   }
+
+  async listAllForUser(userId: string): Promise<Message[]> {
+    return orderThread(
+      this.messages.filter(
+        (m) => m.senderId === userId || m.recipientId === userId,
+      ),
+    ).map((m) => ({ ...m }));
+  }
 }

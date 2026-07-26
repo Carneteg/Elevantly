@@ -103,6 +103,16 @@ export class SupabaseConnectionRepository implements ConnectionRepository {
     if (error) throw new Error(`Kunde inte läsa förfrågningar: ${error.message}`);
     return (data ?? []).map(rowToConnection);
   }
+
+  async listAllForUser(userId: string): Promise<Connection[]> {
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(COLUMNS)
+      .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`);
+
+    if (error) throw new Error(`Kunde inte läsa kopplingar: ${error.message}`);
+    return (data ?? []).map(rowToConnection);
+  }
 }
 
 /** PostgREST `.or`-filter för ett oordnat par (endera riktning). */

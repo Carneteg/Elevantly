@@ -46,4 +46,10 @@ export interface ConnectionRepository {
 
   /** Inkommande `pending`-förfrågningar riktade till `userId`. */
   listIncomingPending(userId: string): Promise<Connection[]>;
+
+  /**
+   * ALLA kopplingar som `userId` ingår i, oavsett status och riktning. För
+   * dataexport (GDPR, CLAUDE.md 9.2): användaren ska kunna se allt som rör dem.
+   */
+  listAllForUser(userId: string): Promise<Connection[]>;
 }

@@ -51,6 +51,16 @@ describe("InMemoryMessageRepository", () => {
     expect(thread.map((m) => m.body)).toEqual(["2", "3"]);
   });
 
+  it("listar ALLA meddelanden en användare ingår i (export), äldst först", async () => {
+    const repo = new InMemoryMessageRepository();
+    await repo.send("a", "b", "1", T1); // a skickar
+    await repo.send("c", "a", "2", T2); // a mottar
+    await repo.send("b", "c", "3", T3); // rör inte a
+
+    const all = await repo.listAllForUser("a");
+    expect(all.map((m) => m.body)).toEqual(["1", "2"]);
+  });
+
   it("isolerar lagringen från extern mutation", async () => {
     const repo = new InMemoryMessageRepository();
     const sent = await repo.send("a", "b", "text", T1);

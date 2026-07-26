@@ -3,6 +3,7 @@ import { SupabaseProfileRepository } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { DecisionList } from "@/components/DecisionList";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { AccountData } from "@/components/AccountData";
 
 /**
  * Din profil — den grundade, strukturerade kärnan som ackumuleras mellan besök.
@@ -82,6 +83,8 @@ export default async function ProfilePage() {
           </p>
         </>
       )}
+
+      <AccountData />
     </main>
   );
 }

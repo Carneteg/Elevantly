@@ -99,6 +99,20 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
 - Nästa: en **granskningsvy** för rapporter/blockeringar (admin), och att lyfta
   blockering till DB-nivå (RLS på inlägg/meddelanden) som djupare försvar.
 
+### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
+**Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med
+persondata i flera lager (profil, kopplingar, flöde, meddelanden, blockeringar)
+är dataägande inte en eftertanke (CLAUDE.md 9.2).
+- **Exportera:** `listAllForUser` på kopplings- och meddelanderepot + en
+  session-bunden `GET /api/account/export` som samlar profil, beslut, kopplingar,
+  inlägg, meddelanden och blockeringar till en nedladdningsbar JSON-fil (RLS: bara
+  din egen data).
+- **Radera konto:** migration `0008` — en `security definer`-funktion
+  `delete_my_account()` som raderar den inloggade användarens `auth.users`-rad;
+  `on delete cascade` (0001–0007) tar bort resten. Ingen service-role-nyckel
+  (CLAUDE.md 14). `POST /api/account/delete` + en "Din data"-sektion på
+  profilsidan (exportknapp + radering med RADERA-bekräftelse).
+
 ---
 
 ## 🌅 Längre fram

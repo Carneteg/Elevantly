@@ -71,6 +71,19 @@ describe("InMemoryConnectionRepository", () => {
     expect(await repo.findBetween("a", "b")).toBeNull();
   });
 
+  it("listar ALLA kopplingar för en användare oavsett status/riktning (export)", async () => {
+    const repo = new InMemoryConnectionRepository();
+    await repo.request("a", "b", T1); // a är requester (pending)
+    await repo.request("c", "a", T1); // a är addressee (pending)
+    await repo.request("b", "c", T1); // rör inte a
+
+    const all = await repo.listAllForUser("a");
+    expect(all).toHaveLength(2);
+    expect(all.every((c) => c.requesterId === "a" || c.addresseeId === "a")).toBe(
+      true,
+    );
+  });
+
   it("isolerar lagringen från extern mutation", async () => {
     const repo = new InMemoryConnectionRepository();
     const created = await repo.request("a", "b", T1);

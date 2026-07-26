@@ -21,4 +21,10 @@ export interface MessageRepository {
    * begränsad till `limit`.
    */
   listThread(userA: string, userB: string, limit?: number): Promise<Message[]>;
+
+  /**
+   * ALLA meddelanden som `userId` ingår i (skickade eller mottagna), äldst först.
+   * För dataexport (GDPR, CLAUDE.md 9.2): användaren ska kunna se allt som rör dem.
+   */
+  listAllForUser(userId: string): Promise<Message[]>;
 }
