@@ -42,33 +42,48 @@ interface StoredProfile {
 }
 ```
 
-- **`InMemoryProfileRepository`** finns nu (per-instans, för lokal utveckling och
-  tester). Testad.
-- **`SupabaseProfileRepository`** läggs till senare bakom samma interface —
-  produktlogiken behöver inte röras.
+- **`InMemoryProfileRepository`** — per-instans, för lokal utveckling och tester.
+  Testad.
+- **`SupabaseProfileRepository`** — byggd, bakom samma interface. Tar in en
+  Supabase-klient (injiceras) och gör CRUD mot `profiles`. Testad mot en fejkad
+  klient. Produktlogiken ser ingen skillnad mot in-memory-varianten.
 
-### Supabase-mappning (planerad, ej byggd)
+### Supabase-schema (byggt: `supabase/migrations/0001_profiles.sql`)
 
-- Tabell `profiles` (eller `decisions`) med kolumnen `user_id` som pekar på
-  `auth.users`.
-- **Row-level security (RLS):** en användare kan bara läsa/skriva sina egna
-  rader. Detta är den avgörande säkerhetsspärren och sätts när Supabase kopplas
-  in.
-- Auth via **Supabase Auth**; servern läser `userId` ur den autentiserade
-  sessionen. Vi bygger aldrig egen kryptografi/lösenordshantering.
+- Tabell `public.profiles`: `user_id` (PK → `auth.users`, `on delete cascade`),
+  `decisions` (jsonb), `created_at`, `updated_at`.
+- **Row-level security:** fyra policies så att en användare ENDAST kan
+  läsa/skapa/uppdatera/radera sin egen rad (`auth.uid() = user_id`). Detta är den
+  avgörande spärren.
+- Kör migrationen i Supabase (SQL editor eller `supabase db push`) när projektet
+  är kopplat.
 
-## Öppna beslut (innan auth/UX-lagret byggs)
+### Auth-koppling (byggs i nästa steg)
 
-Dessa stäms av med produktägaren — de styr nästa steg, inte grunden ovan:
+- **Supabase Auth, magisk länk via e-post** (beslutat). Ingen egen
+  kryptografi/lösenordshantering.
+- Klienten som skickas till `SupabaseProfileRepository` **måste** vara knuten till
+  den inloggade användarens session, så att RLS gäller. Servern läser `userId` ur
+  sessionen.
 
-1. **Inloggningsmetod:** Supabase Auth magisk länk (e-post) vs OAuth (Google)
-   vs båda.
-2. **Vad som sparas:** bara `Decision`-poster (minimalt, rekommenderat) eller
-   även användarens råa inmatningar/historik.
-3. **Återvändande-flöde:** ackumulera beslut över besök och spegla över hela
-   mängden (rekommenderat), eller per-session.
-4. **Scaffolda Supabase nu** (SQL-migration + RLS + `SupabaseProfileRepository`,
-   redo att koppla nyckel till) eller vänta.
+## Beslutat (produktägaren)
+
+1. **Inloggning:** Supabase Auth, magisk länk via e-post.
+2. **Vad som sparas:** bara `Decision`-poster (dataminimering).
+3. **Återbesök:** ackumulera beslut över besök och spegla över hela den samlade
+   mängden.
+4. **Supabase:** scaffoldat nu (migration + RLS + `SupabaseProfileRepository`),
+   redo att koppla nyckel till.
+
+## Kvar att bygga (nästa steg)
+
+- Auth-flöde (magisk länk) + inloggningsyta, och server-side läsning av `userId`.
+- Ackumulera-flödet: nya beslut läggs till profilen; speglingen körs över hela
+  den samlade mängden (kräver att AI-lagret kan resonera över en uppsättning
+  `Decision`-poster, inte bara fritext — stäms av innan bygge).
+- Export- och raderingsyta för användaren (GDPR).
+- Miljövariabler för Supabase (`SUPABASE_URL`, nycklar) + val av repository
+  (in-memory vs Supabase) i webb-lagret.
 
 ## Vad detta inte är
 

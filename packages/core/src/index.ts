@@ -47,8 +47,9 @@ export type {
   InMemoryRateLimiterOptions,
 } from "./ratelimit/rateLimiter";
 
-// Persistens: användarprofiler (utbytbart lager — Supabase kopplas in senare)
+// Persistens: användarprofiler (utbytbart lager — in-memory + Supabase)
 export { InMemoryProfileRepository } from "./persistence/inMemoryProfileRepository";
+export { SupabaseProfileRepository } from "./persistence/supabaseProfileRepository";
 export type {
   ProfileRepository,
   StoredProfile,
