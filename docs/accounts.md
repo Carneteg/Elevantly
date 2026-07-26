@@ -58,13 +58,25 @@ interface StoredProfile {
 - Kör migrationen i Supabase (SQL editor eller `supabase db push`) när projektet
   är kopplat.
 
-### Auth-koppling (byggs i nästa steg)
+### Auth + profil (byggt)
 
-- **Supabase Auth, magisk länk via e-post** (beslutat). Ingen egen
-  kryptografi/lösenordshantering.
-- Klienten som skickas till `SupabaseProfileRepository` **måste** vara knuten till
-  den inloggade användarens session, så att RLS gäller. Servern läser `userId` ur
-  sessionen.
+Inloggning via **Supabase Auth, magisk länk** (`@supabase/ssr`), i webb-lagret:
+
+- `lib/supabase/{client,server}.ts` + `middleware.ts` (roterar sessionen).
+- `/login` (magisk länk) → `/auth/callback` (byter kod mot session) → `/profile`.
+- `/profile` är skyddad (kräver inloggning) och visar den ackumulerade profilen
+  via `SupabaseProfileRepository`, som får en session-bunden klient → RLS gäller.
+- `/api/reflect` sparar (bästa förmåga) nya beslut till den inloggades profil
+  och ackumulerar dem (`upsertProfile`). Utloggade användare speglar som förut,
+  inget sparas.
+- Miljö: `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (publika,
+  skyddade av RLS). Saknas de är inloggning avstängd men appen fungerar.
+
+**Supabase-konfiguration som krävs** (utöver migrationen):
+- Authentication → **URL Configuration**: sätt **Site URL** till produktions-URL:en
+  och lägg previews/prod-URL:er under **Redirect URLs** (annars avvisas den
+  magiska länkens `/auth/callback`-redirect).
+- Email-providern (magisk länk) påslagen.
 
 ## Beslutat (produktägaren)
 
@@ -77,13 +89,14 @@ interface StoredProfile {
 
 ## Kvar att bygga (nästa steg)
 
-- Auth-flöde (magisk länk) + inloggningsyta, och server-side läsning av `userId`.
-- Ackumulera-flödet: nya beslut läggs till profilen; speglingen körs över hela
-  den samlade mängden (kräver att AI-lagret kan resonera över en uppsättning
-  `Decision`-poster, inte bara fritext — stäms av innan bygge).
-- Export- och raderingsyta för användaren (GDPR).
-- Miljövariabler för Supabase (`SUPABASE_URL`, nycklar) + val av repository
-  (in-memory vs Supabase) i webb-lagret.
+- **Spegla över hela den ackumulerade mängden:** idag ackumuleras besluten på
+  profilen, men speglingen resonerar fortfarande per inmatning. Nästa steg är att
+  låta AI-lagret spegla över en uppsättning `Decision`-poster (utöka `AIEngine`)
+  — stäms av innan bygge.
+- **Export- och raderingsyta** för användaren (GDPR) — `delete()` finns i
+  repositoryt, ytan återstår.
+- Det sociala lagret ovanpå profilen (synlig profil → kontakter → flöde), se
+  `docs/roadmap.md`.
 
 ## Vad detta inte är
 

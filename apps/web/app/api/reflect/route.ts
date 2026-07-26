@@ -4,8 +4,17 @@ import {
   EngineError,
   InMemoryRateLimiter,
   runReflection,
+  SupabaseProfileRepository,
+  upsertProfile,
 } from "@elevantly/core";
-import type { AIProvider, RateLimiter, Reflection } from "@elevantly/core";
+import type {
+  AIProvider,
+  Decision,
+  RateLimiter,
+  Reflection,
+} from "@elevantly/core";
+import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 /**
  * Server-route för Spegeln. Här — och bara här — läses API-nyckeln ur miljön;
@@ -86,9 +95,9 @@ export async function POST(
     return jsonError("AI-motorn är inte konfigurerad.", 503);
   }
 
+  let reflection: Reflection;
   try {
-    const reflection = await runReflection(engine, text);
-    return NextResponse.json({ reflection });
+    reflection = await runReflection(engine, text);
   } catch (error) {
     if (error instanceof EngineError) {
       return jsonError(
@@ -97,6 +106,39 @@ export async function POST(
       );
     }
     throw error;
+  }
+
+  // Är användaren inloggad ackumuleras besluten på profilen. Bästa förmåga:
+  // en misslyckad sparning får aldrig bryta speglingen.
+  await persistToProfile(reflection.decisions);
+
+  return NextResponse.json({ reflection });
+}
+
+/**
+ * Sparar nya beslut till den inloggade användarens profil (om någon är
+ * inloggad). Row-level security ser till att bara den egna profilen rörs.
+ */
+async function persistToProfile(decisions: Decision[]): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const repository = new SupabaseProfileRepository(supabase);
+    const existing = await repository.load(user.id);
+    const updated = upsertProfile(
+      existing,
+      user.id,
+      decisions,
+      new Date().toISOString(),
+    );
+    await repository.save(updated);
+  } catch {
+    // Tyst: sparningen är sekundär, speglingen är huvudsaken.
   }
 }
 
