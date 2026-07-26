@@ -65,6 +65,7 @@ describe("upsertProfile", () => {
     expect(profile).toEqual<StoredProfile>({
       userId: "user-1",
       decisions: [decision("A")],
+      visibility: "private",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
@@ -74,6 +75,7 @@ describe("upsertProfile", () => {
     const existing: StoredProfile = {
       userId: "user-1",
       decisions: [decision("A")],
+      visibility: "private",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
@@ -87,6 +89,7 @@ describe("upsertProfile", () => {
     const existing: StoredProfile = {
       userId: "user-1",
       decisions: [decision("A")],
+      visibility: "private",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };

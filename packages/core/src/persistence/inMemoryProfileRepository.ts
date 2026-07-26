@@ -1,4 +1,9 @@
-import type { ProfileRepository, StoredProfile } from "./profile";
+import type {
+  ProfileRepository,
+  PublicProfile,
+  StoredProfile,
+} from "./profile";
+import { normalizeHandle } from "./handle";
 
 /**
  * In-memory-implementation av ProfileRepository.
@@ -28,6 +33,27 @@ export class InMemoryProfileRepository implements ProfileRepository {
 
   async delete(userId: string): Promise<void> {
     this.store.delete(userId);
+  }
+
+  async loadPublicProfileByHandle(
+    handle: string,
+  ): Promise<PublicProfile | null> {
+    const wanted = normalizeHandle(handle);
+    for (const profile of this.store.values()) {
+      if (
+        profile.visibility === "public" &&
+        profile.handle &&
+        normalizeHandle(profile.handle) === wanted
+      ) {
+        return {
+          handle: profile.handle,
+          displayName: profile.displayName ?? null,
+          headline: profile.headline ?? null,
+          decisions: structuredClone(profile.decisions),
+        };
+      }
+    }
+    return null;
   }
 }
 

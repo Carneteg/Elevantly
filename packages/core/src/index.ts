@@ -58,9 +58,12 @@ export { SupabaseProfileRepository } from "./persistence/supabaseProfileReposito
 export type {
   ProfileRepository,
   StoredProfile,
+  PublicProfile,
+  ProfileVisibility,
 } from "./persistence/profile";
 export {
   mergeDecisions,
   upsertProfile,
   MAX_PROFILE_DECISIONS,
 } from "./persistence/accumulateProfile";
+export { isValidHandle, normalizeHandle } from "./persistence/handle";

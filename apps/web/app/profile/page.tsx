@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { SupabaseProfileRepository } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { DecisionList } from "@/components/DecisionList";
+import { ProfileEditor } from "@/components/ProfileEditor";
 
 /**
  * Din profil — den grundade, strukturerade kärnan som ackumuleras mellan besök.
@@ -47,6 +48,22 @@ export default async function ProfilePage() {
           </button>
         </form>
       </header>
+
+      <section aria-labelledby="share-heading" className="mb-12">
+        <h2 id="share-heading" className="mb-2 text-xl font-semibold">
+          Din delbara profil
+        </h2>
+        <p className="mb-4 text-sm text-[var(--color-muted)]">
+          Välj ett användarnamn och gör profilen offentlig när du vill dela den.
+          Den är privat tills du väljer annat.
+        </p>
+        <ProfileEditor
+          initialHandle={profile?.handle ?? ""}
+          initialDisplayName={profile?.displayName ?? ""}
+          initialHeadline={profile?.headline ?? ""}
+          initialVisibility={profile?.visibility ?? "private"}
+        />
+      </section>
 
       {decisions.length === 0 ? (
         <div className="rounded-2xl border border-[var(--color-line)] bg-white/50 p-6">

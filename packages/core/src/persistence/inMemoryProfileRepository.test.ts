@@ -13,12 +13,18 @@ function decision(action: string): Decision {
   };
 }
 
-function profile(userId: string, actions: string[]): StoredProfile {
+function profile(
+  userId: string,
+  actions: string[],
+  overrides: Partial<StoredProfile> = {},
+): StoredProfile {
   return {
     userId,
     decisions: actions.map(decision),
+    visibility: "private",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
   };
 }
 
@@ -78,5 +84,53 @@ describe("InMemoryProfileRepository", () => {
   it("vägrar spara en profil utan userId", async () => {
     const repo = new InMemoryProfileRepository();
     await expect(repo.save(profile("", ["A"]))).rejects.toThrow();
+  });
+
+  describe("loadPublicProfileByHandle", () => {
+    it("hämtar en offentlig profil via handle — utan userId eller e-post", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("user-1", ["Ledde ett team"], {
+          visibility: "public",
+          handle: "tobias",
+          displayName: "Tobias",
+          headline: "Produktledare",
+        }),
+      );
+
+      const publicProfile = await repo.loadPublicProfileByHandle("tobias");
+      expect(publicProfile).toEqual({
+        handle: "tobias",
+        displayName: "Tobias",
+        headline: "Produktledare",
+        decisions: [decision("Ledde ett team")],
+      });
+      // Inget läckage av privata fält.
+      expect(publicProfile).not.toHaveProperty("userId");
+    });
+
+    it("matchar handle skiftlägesokänsligt", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("user-1", ["A"], { visibility: "public", handle: "tobias" }),
+      );
+      expect(await repo.loadPublicProfileByHandle("Tobias")).not.toBeNull();
+    });
+
+    it("returnerar null för en privat profil", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("user-1", ["A"], { visibility: "private", handle: "tobias" }),
+      );
+      expect(await repo.loadPublicProfileByHandle("tobias")).toBeNull();
+    });
+
+    it("returnerar null för ett handle som inte finns", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("user-1", ["A"], { visibility: "public", handle: "tobias" }),
+      );
+      expect(await repo.loadPublicProfileByHandle("saknas")).toBeNull();
+    });
   });
 });

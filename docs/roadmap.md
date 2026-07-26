@@ -28,25 +28,28 @@ bra på — och vilka roller det pekar mot?"*
 - Motoragnostiskt AI-lager (`ClaudeEngine` + `GptEngine`), robusthet (rate
   limit, parser-gränser), CI + e2e-verifiering.
 
-## 🔜 Pågår — konton & persistens (förutsättning för allt socialt)
+## ✅ Byggt — konton & persistens (förutsättning för allt socialt)
 
 **Användarfråga:** *"Får jag tillbaka min profil och kan bygga vidare på den
 mellan besök?"* En sparad, ägd identitet är fundamentet man knyter nätverket
 till.
 
-- `ProfileRepository` + Supabase-scaffolding (migration + RLS) — *i granskning.*
-- Kvar: auth (magisk länk) + inloggningsyta + ackumulera-flödet.
+- `ProfileRepository` + Supabase (migration `0001` + RLS), auth (magisk länk),
+  inloggningsyta och ackumulera-flödet (`upsertProfile`).
 
 ---
 
 ## 🗺️ Det sociala lagret (ny riktning — föreslagen ordning)
 
-### 1. Publik / synlig profil
+### 1. Publik / synlig profil — 🔜 *pågår*
 **Användarfråga:** *"Kan andra hitta och förstå mitt professionella värde?"*
-- Din grundade profil blir visningsbar, med **synlighetskontroll** (privat /
-  endast kontakter / offentlig) — samtycke och kontroll enligt CLAUDE.md 9.
-- Substans över fåfänga: profilen visar bevisade beslut/utfall, inte tomma
-  titlar.
+- Din grundade profil blir visningsbar via en delbar länk (`/u/handle`), med
+  **synlighetskontroll** — default privat, offentlig är ett uttryckligt opt-in
+  (CLAUDE.md 9.3). Migration `0002` (visibility/handle/profiltext + RLS
+  public-read), profil-editor och den publika profilsidan.
+- Substans över fåfänga: profilen visar bevisade beslut/utfall (bara poster med
+  spårbar källa), aldrig e-post eller `userId`, inga tomma titlar.
+- Nästa steg här: `contacts`-synlighet (endast kontakter) när kontakter finns.
 
 ### 2. Kontakter & relationer
 **Användarfråga:** *"Kan jag bygga och nå mitt professionella nätverk?"*
