@@ -1,20 +1,22 @@
 # Elevantly
 
-**En AI-first professionell identitetsplattform.** Elevantly hjälper
-människor att förstå sitt professionella värde, utvecklas i sin karriär och
-skapa rätt möjligheter — genom högkvalitativ, strukturerad data istället för
-innehåll och följare.
+**En AI-first professionell identitets- och nätverksplattform.** Elevantly
+hjälper människor att förstå sitt professionella värde, utvecklas i sin karriär
+och skapa rätt möjligheter — genom en **grundad, strukturerad profil** och ett
+**professionellt nätverk** byggt på substans i stället för uppblåsta titlar.
 
-Vi bygger inte ett bättre LinkedIn. Vi bygger den professionella plattform
-man hade byggt 2026 om LinkedIn aldrig funnits.
+Vi bygger den professionella plattform man hade byggt 2026 om LinkedIn aldrig
+funnits: nätverk, flöde och möjligheter — men ärligt, på verifierbar substans.
 
 ## Vad vi tror på
 
 - **AI är motorn, inte produkten.** Produkten styr AI — aldrig tvärtom.
 - **Beslut och utfall framför titlar.** Vi bygger på vad människor faktiskt
-  har gjort ("minskade churn 12%"), inte på påståenden om roller.
-- **Värde varje vecka.** Du ska få professionellt värde ur din egen data
-  även om ingen kontaktar dig.
+  har gjort ("minskade churn 12%"), inte på påståenden om roller. Det gäller
+  även i det sociala lagret — profiler byggs på substans.
+- **Värde på två sätt.** Din egen data ger värde även om ingen kontaktar dig,
+  och nätverket ger värde genom riktiga relationer och möjligheter.
+- **Substans över fåfänga.** Följarsiffror och likes blir aldrig produktens själ.
 - **Vi samlar aldrig data för datans skull.** Varje datapunkt måste besvara
   en konkret användarfråga.
 - **Steve Jobs-standard.** Enkelhet, smak och genialitet är krav — inte
@@ -22,8 +24,9 @@ man hade byggt 2026 om LinkedIn aldrig funnits.
 
 ## Vad vi INTE bygger
 
-Ett socialt nätverk. Inget flöde, inga likes, inga följare. Inga funktioner
-vars värde kräver att någon annan agerar.
+Vi bygger ett socialt lager — men aldrig mörka mönster, doomscroll-optimering,
+fåfänga som själ, eller professionella påståenden utan spårbar grund. Förtroende
+är produkten. Se [`CLAUDE.md`](./CLAUDE.md) avsnitt 11.
 
 ## Tech stack
 

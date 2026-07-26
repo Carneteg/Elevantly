@@ -3,90 +3,95 @@
 > Status: levande planeringsdokument. Beskriver vad som är byggt och den
 > **föreslagna** ordningen framåt. Prioritering och nya punkter beslutas av
 > produktägaren (CLAUDE.md). Varje punkt måste bära en **namngiven
-> användarfråga** (CLAUDE.md 6.1 / 7.1) — vi bygger inget utan en, och inget
-> som bryter mot "Detta bygger vi ALDRIG" (CLAUDE.md 11).
+> användarfråga** och följa grundlagen (inkl. "Detta bygger vi ALDRIG").
+>
+> **Riktning:** en professionell plattform med ett socialt lager — grundad
+> profil + nätverk, flöde och möjligheter. Kärnan (grundad, strukturerad
+> identitet) är särskiljaren; det sociala byggs ovanpå, ärligt.
 
 ## Princip för ordningen
 
 Vi bygger den tunnaste möjliga produkten som skapar verkligt värde först och
-lägger på lager först när de tjänar en användarfråga. Ordningen följer CLAUDE.md,
-`docs/spegeln-v1-spec.md` (vad som byggs senare) och `docs/data-sources.md`
-(konkreta insikter är uttalad tvåa).
+lägger på lager när de tjänar en användarfråga. Identiteten kommer före det
+sociala — man kan inte nätverka runt en tom profil, och även en ensam användare
+ska få värde från dag ett (CLAUDE.md 6.2).
 
 ---
 
-## ✅ Byggt — Spegeln v1, den strukturerade kärnan
+## ✅ Byggt — den grundade identitetskärnan
 
-**Användarfråga:** *"Vad säger det jag faktiskt gjort om vad jag är bra på — och
-vilka roller det pekar mot?"*
+**Spegeln v1.** Användarfråga: *"Vad säger det jag faktiskt gjort om vad jag är
+bra på — och vilka roller det pekar mot?"*
 
-- En enda skärm: fritext → förankrade `Decision`-poster + tolkning + en
-  uppföljningsfråga. Inget sparas mellan besök.
-- **Ärlig förankring:** `ClaimKind` (`quote`/`interpretation`/`verified`),
-  "Du skrev: …" för citat vs "Tolkat från: …" för tolkningar, roller som
-  *möjliga riktningar* — aldrig konstateranden. Inget visas som fakta utan
-  spårbar källa i användarens egen text.
-- **Typade capabilities** (`name`/`confidence`/`sources`) och **ansvarsnivå**
-  (`participated`…`owned`/`unknown`) som aldrig sätts högre än texten stödjer.
-- **Motoragnostiskt AI-lager:** `ClaudeEngine` + `GptEngine` bakom `AIEngine`,
-  motorval via miljön. *(OpenAI-motorn i granskning.)*
-- **Robusthet:** per-IP rate limit, hårda parser-/input-gränser.
-- **CI** (test/typecheck/build) + manuell **e2e-verifiering** mot skarp modell.
+- Fritext → förankrade `Decision`-poster + tolkning, ärlig förankring
+  ("Du skrev:" / "Tolkat från:"), typade capabilities + ansvarsnivå.
+- Motoragnostiskt AI-lager (`ClaudeEngine` + `GptEngine`), robusthet (rate
+  limit, parser-gränser), CI + e2e-verifiering.
 
----
+## 🔜 Pågår — konton & persistens (förutsättning för allt socialt)
 
-## 🔜 Härnäst — gå live
-
-**Användarvärde:** appen blir nåbar för riktiga användare.
-
-- Deploya webb-appen (Vercel eller annan Node-host), AI-nyckeln som server-side
-  secret. *(Deploy-guide klar: `docs/deploy.md`, i granskning.)*
-- Skarp e2e-verifiering med riktig nyckel.
-
----
-
-## 🗺️ Nästa lager (föreslagen ordning — produktägaren beslutar)
-
-### 1. Konkreta marknadsinsikter *(uttalad tvåa, `docs/data-sources.md`)*
-**Användarfråga:** *"Vad är min rolltyp värd och vad efterfrågas — med en källa
-jag kan lita på?"*
-- Börja med **öppna källor** och **spårbar källa + färskhet per siffra**: SCB
-  lönestatistik (SSYK), Arbetsförmedlingens JobTech för rolltrender, ESCO/SSYK
-  för kompetens-/rollstruktur.
-- Regel: en siffra utan spårbar källa visas aldrig som fakta.
-
-### 2. Konton & persistens (Supabase)
 **Användarfråga:** *"Får jag tillbaka min profil och kan bygga vidare på den
-mellan besök?"*
-- Auth + lagring av `Decision`-data i Supabase (Postgres). Datamodellen är redan
-  ren och ägarskaps-neutral, så detta läggs på **utan omskrivning**.
-- Användaren äger, kan exportera och radera sin data (GDPR).
-- Förutsättning för flera punkter nedan.
+mellan besök?"* En sparad, ägd identitet är fundamentet man knyter nätverket
+till.
 
-### 3. Produktionshärdning för skala
-**Användarvärde:** tjänsten håller när fler använder den.
-- Delad rate-limit-store (t.ex. Redis) bakom `RateLimiter`-interfacet.
-- Observability, felhantering och kostnadskontroll för AI-anrop.
+- `ProfileRepository` + Supabase-scaffolding (migration + RLS) — *i granskning.*
+- Kvar: auth (magisk länk) + inloggningsyta + ackumulera-flödet.
 
 ---
 
-## 🌅 Längre fram (kräver skala/underlag — strikt inom konstitutionen)
+## 🗺️ Det sociala lagret (ny riktning — föreslagen ordning)
 
-- **Kompetens-/karriärgraf** ovanpå ESCO/SSYK, senare berikad med faktiska
-  karriärrörelser ur Elevantlys egen data (efter skala).
-- **Nätverk/relationer** — endast om det håller sig strikt inom "Detta bygger vi
-  ALDRIG": inget flöde, inga likes/följare, inget vars värde kräver att någon
-  annan agerar.
-- **Jobbmatchning** mot riktiga roller.
-- **Kommersiella datakällor** (mer aktuell lön m.m.) när underlag och behov finns.
-- **Separat app (t.ex. mobil)** som återanvänder samma `packages/core` —
-  arkitekturen är redan uppdelad så logik, datamodell och AI-lager kan delas utan
-  omskrivning.
+### 1. Publik / synlig profil
+**Användarfråga:** *"Kan andra hitta och förstå mitt professionella värde?"*
+- Din grundade profil blir visningsbar, med **synlighetskontroll** (privat /
+  endast kontakter / offentlig) — samtycke och kontroll enligt CLAUDE.md 9.
+- Substans över fåfänga: profilen visar bevisade beslut/utfall, inte tomma
+  titlar.
+
+### 2. Kontakter & relationer
+**Användarfråga:** *"Kan jag bygga och nå mitt professionella nätverk?"*
+- Skicka/acceptera kontakt, se ömsesidiga kontakter. Riktiga relationer, inga
+  fåfänga-följarsiffror som produktens själ (CLAUDE.md 6.5, 11).
+
+### 3. Professionellt flöde
+**Användarfråga:** *"Vad händer i mitt nätverk som är värt min tid?"*
+- Dela uppdateringar/insikter; se relevant innehåll från nätverket.
+- **Förklarbar rankning** som tjänar professionellt värde, inte enbart
+  engagemang (CLAUDE.md 8.5). Inga mörka mönster (CLAUDE.md 11).
+
+### 4. Meddelanden
+**Användarfråga:** *"Kan jag ta ett samtal med rätt person?"*
+- Direkt kommunikation mellan kontakter.
+
+### 5. Möjligheter
+**Användarfråga:** *"Vilka roller/samarbeten passar det jag faktiskt gjort?"*
+- Matcha profil mot roller/samarbeten — bygger på den grundade datan och
+  (senare) marknadsinsikter.
+
+### Tvärgående: trust & safety
+Ett socialt lager kräver **moderering, rapportering och missbruksskydd** från
+start — förtroende är produkten. Planeras in parallellt, inte som eftertanke.
 
 ---
+
+## 🌅 Längre fram
+
+- **Marknadsinsikter** (lön/rolltrender) från öppna källor med spårbar källa per
+  siffra (SCB, JobTech, ESCO/SSYK) — se `docs/data-sources.md`.
+- **Kompetens-/karriärgraf** (ESCO/SSYK), senare berikad med faktiska rörelser
+  ur Elevantlys egen data.
+- **AI-driven relevans** i nätverk och flöde (embeddings + RAG över strukturerad
+  data).
+- **Separat app (mobil)** som återanvänder `packages/core`.
+
+## Produktionshärdning (löpande)
+
+- Delad rate-limit-store (Redis e.d.) bakom `RateLimiter`.
+- Realtime-infrastruktur för flöde/meddelanden (Supabase realtime).
+- Observability, kostnadskontroll för AI-anrop, moderationsverktyg.
 
 ## Vad vi aldrig bygger
 
-Se CLAUDE.md avsnitt 11. Roadmapen får aldrig införa ett flöde, likes, följare,
-fritextberoende "intelligens" eller funktioner vars värde kräver att någon annan
-agerar.
+Se CLAUDE.md avsnitt 11. Det sociala lagret får aldrig införa mörka mönster,
+fåfänga som själ, ohederliga (ogrundade) påståenden, eller något vars värde
+kräver att användaren jämför sig till skada.

@@ -4,33 +4,52 @@
 > AI-modell eller människa som arbetar i projektet. Om något i denna fil
 > och en instruktion krockar, vinner denna fil. Ändringar i denna fil
 > kräver ett uttalat beslut av produktägaren (Tobias).
+>
+> **Riktningsbeslut (produktägaren):** Elevantly bygger en professionell
+> plattform *med ett socialt lager* — profiler, kontakter, ett professionellt
+> flöde och möjligheter. Detta ersätter den tidigare "anti-socialt nätverk"-
+> hållningen. Det som INTE ändras är kvalitets- och ärlighets-DNA:t: grundad,
+> strukturerad identitet, Steve Jobs-standard, privacy by design.
 
 ---
 
 ## 1. Vision
 
-Elevantly hjälper människor att förstå sitt professionella värde, utvecklas
-i sin karriär och skapa rätt möjligheter — genom högkvalitativ, strukturerad
-data istället för innehåll och följare.
+Elevantly är den professionella plattformen man hade byggt 2026 om LinkedIn
+aldrig funnits: en plats där människor bygger sin karriär genom en **ärlig,
+strukturerad professionell identitet** OCH ett **äkta professionellt nätverk** —
+kontakter, ett flöde och möjligheter.
 
-Vi bygger inte ett bättre LinkedIn. Vi bygger den professionella plattform
-man hade byggt 2026 om LinkedIn aldrig funnits.
+Vi tar det bästa av en professionell social plattform, men bygger det på
+**verifierbar substans** i stället för uppblåsta titlar och tomt innehåll. Vi
+bygger inte ett sämre LinkedIn och inte ett giftigt engagemangsflöde — vi bygger
+det professionella nätverk som är värt människors förtroende.
 
 ## 2. Mission
 
-Ge varje användare konkret professionellt värde varje vecka — även om ingen
-kontaktar dem. Värdet ska uppstå ur användarens egen data och en AI som
-resonerar kring den, inte ur att någon annan råkar behöva personen.
+Ge varje användare konkret professionellt värde — både ur sin **egen
+strukturerade data** och ur ett **nätverk och innehåll** som faktiskt hjälper
+dem framåt.
+
+Värde ska kunna uppstå på två sätt, och vi bygger för båda:
+- **Utan att någon agerar** — din identitet och dina insikter ger värde även om
+  ingen kontaktar dig.
+- **Genom relationer** — kontakter, samtal, delat innehåll och möjligheter som
+  för dig framåt.
 
 ## 3. Vad Elevantly ÄR (och inte är)
 
 Elevantly är ett **produktprojekt**. AI är motorn, inte produkten.
 
-- Elevantly är en AI-first professionell **identitetsplattform**.
-- Elevantly är **inte** ett socialt nätverk.
+- Elevantly är en AI-first professionell **identitets- och nätverksplattform**:
+  en grundad profil + ett professionellt socialt lager (kontakter, flöde,
+  meddelanden, möjligheter).
 - **Produkten styr AI. AI styr aldrig produkten.** När ett beslut står och
-  väger avgörs det av användarvärde och produktprincip — aldrig av vad som
-  är tekniskt lockande eller vad modellen "vill".
+  väger avgörs det av användarvärde och produktprincip — aldrig av vad som är
+  tekniskt lockande eller vad modellen "vill".
+- Skillnaden mot LinkedIn är inte att vi undviker det sociala — det är att vi
+  gör det **ärligt**: grundad profil, meningsfullt innehåll, riktiga relationer.
+  Vi konkurrerar på förtroende, inte på engagemangsknep.
 
 ## 4. Mindset (Steve Jobs-standarden)
 
@@ -55,50 +74,70 @@ som kravnivå:
   som är utmärkta än hundra som är okej.
 - Varje skärm ska ha ett tydligt svar på: "Vad är det enda viktigaste
   användaren ska göra eller förstå här?"
+- **Det sociala ska tjäna användaren, inte tvärtom.** Vi designar för att föra
+  människor framåt i sin karriär — inte för att maximera tid i appen.
 
 ## 6. Produktprinciper
 
 1. Varje funktion måste besvara: **"Vilket konkret värde får användaren av
-   detta inom de kommande sju dagarna?"** Om svaret är "inget" — bygg den inte.
-2. Vi är extremt disciplinerade kring scope. Feature creep är den största
-   risken, inte konkurrenter.
-3. Vi bygger den tunnaste möjliga produkten som skapar verkligt användarvärde
-   först. Arkitektur, frontend och grafer kommer efter, inte före.
+   detta?"** — antingen för användaren själv eller genom en meningsfull
+   relation/möjlighet. Om svaret är "inget" — bygg den inte.
+2. **Både individuellt värde och nätverksvärde räknas** — men vi lutar oss
+   aldrig BARA på nätverkseffekter. Även en ensam ny användare ska få värde
+   från dag ett (annars är det en tom sal).
+3. Vi är extremt disciplinerade kring scope. Feature creep är den största
+   risken. Vi bygger den tunnaste möjliga produkten som skapar verkligt värde
+   först.
 4. Ingen funktion får göra användarens professionella identitet otydligare,
-   mindre trovärdig eller mindre värdefull.
+   mindre trovärdig eller mindre värdefull — inte heller det sociala lagret.
+5. **Substans över fåfänga.** Följarsiffror och likes får aldrig bli
+   produktens själ. Värdet ligger i verkligt professionellt innehåll och
+   riktiga relationer.
 
 ## 7. Dataprinciper
 
 1. **Vi samlar aldrig data för datans skull.** Varje datapunkt måste ha en
    namngiven **användarfråga** den besvarar. Ingen användarfråga → ingen
    insamling. (Detta är också GDPR-dataminimering i praktiken.)
-2. **Beslut och utfall framför titlar.** Grundenheten i datamodellen är ett
-   bevisat beslut med ett utfall ("minskade churn 12%"), inte en roll med en
-   titel ("Customer Care Manager"). CV:t är i bästa fall en biprodukt
-   systemet kan generera — aldrig det vi bygger värdet på.
-3. **Struktur driver intelligensen; fritext driver den inte.** Fri text får
-   visas för användaren, men systemets resonemang bygger på strukturerad data.
+2. **Beslut och utfall framför titlar.** Grundenheten i identitetsmodellen är
+   ett bevisat beslut med ett utfall ("minskade churn 12%"), inte en roll med
+   en titel. Detta är särskiljaren även i det sociala lagret: profiler byggs på
+   substans.
+3. **Struktur driver intelligensen; fritext driver den inte.** Fri text (inlägg,
+   meddelanden, profiltext) får visas för användaren, men systemets resonemang
+   bygger på strukturerad data.
 4. **Struktur ska vara ett resultat av inmatning, inte en barriär vid
-   inmatning.** Användaren får mata in fritt och lågfriktion; AI strukturerar
-   i bakgrunden. Vi bygger aldrig ett formulär så stelt att ingen orkar fylla
-   i det, men vi låter aldrig ostrukturerad text bli det som driver systemet.
+   inmatning.** Användaren matar in fritt och lågfriktion; AI strukturerar i
+   bakgrunden.
+5. **Ärlighet i det som visas som fakta.** Ett professionellt påstående som
+   visas som fakta ska vara spårbart till underliggande data (se AI-princip
+   8.3). Detta gäller även socialt innehåll — vi förstärker aldrig uppblåsta
+   påståenden.
 
 ## 8. AI-principer
 
 1. AI är en motor i tjänst av produkten och användaren.
-2. AI får **föreslå, strukturera, resonera och prioritera**. AI får **inte**
-   fatta irreversibla beslut åt användaren utan tydligt samtycke.
+2. AI får **föreslå, strukturera, resonera och prioritera** (även t.ex.
+   relevanta kontakter, innehåll och möjligheter). AI får **inte** fatta
+   irreversibla beslut åt användaren utan tydligt samtycke.
 3. AI-utdata som visas som fakta ska vara spårbar till underliggande data.
    Vi hittar inte på professionella "fakta" om en person.
 4. Modeller är utbytbara. Ingen princip i detta dokument får bero på en
    specifik leverantör.
+5. **Rankning och rekommendation är produktbeslut, inte svarta lådor.** Vad som
+   lyfts i flödet eller föreslås ska tjäna användarens professionella värde,
+   inte enbart engagemang, och ska gå att förklara.
 
 ## 9. GDPR & Compliance (Privacy by Design)
 
-1. Privacy by Design och dataminimering gäller från första raden kod.
+1. Privacy by Design och dataminimering gäller från första raden kod. Det
+   sociala lagret ökar mängden personuppgifter — omsorgen ökar i takt.
 2. Användaren äger sin data, ska kunna se den, exportera den och radera den.
 3. Samtycke är specifikt och informerat — aldrig förkryssat, aldrig framtvingat.
-4. Vi lagrar aldrig mer än vad principen i 7.1 tillåter.
+   Detta gäller särskilt synlighet: användaren styr vad som är privat, för
+   kontakter, eller offentligt.
+4. Vi lagrar aldrig mer än vad principen i 7.1 tillåter, och vi säljer aldrig
+   användarens data.
 
 ## 10. Definition of Done
 
@@ -107,26 +146,37 @@ En uppgift är klar när:
 - [ ] Den följer designfilosofin (ingen manual krävs).
 - [ ] Data den rör är strukturerad enligt dataprinciperna.
 - [ ] Den bryter inte mot någon punkt i "Detta bygger vi aldrig".
-- [ ] Privacy/GDPR-konsekvensen är genomtänkt.
+- [ ] Privacy/GDPR-konsekvensen är genomtänkt (inkl. synlighet/samtycke).
 - [ ] Den är testad och begriplig för nästa person/agent som öppnar koden.
 
 ## 11. Detta bygger vi ALDRIG
 
-- Ett flöde, likes, följare, stories eller innehållskonkurrens.
-- Funktioner vars värde kräver att *någon annan* agerar.
-- Datainsamling utan en namngiven användarfråga bakom.
-- Fritextberoende "intelligens".
-- Något som gör den professionella identiteten otydligare eller mindre trovärdig.
-- Något som kräver en manual för att förstås.
+Vi bygger ett socialt lager — men aldrig på bekostnad av förtroende och
+värdighet:
+
+- **Inga mörka mönster.** Ingen doomscroll-optimering, inga manipulativa
+  notiser, ingen ilska- eller ångest-som-KPI. Vi optimerar för professionellt
+  värde, inte för tid i appen.
+- **Inget professionellt påstående som fakta utan spårbar grund** — vår
+  trovärdighet är produkten.
+- **Fåfänga blir aldrig själen.** Följar-/like-siffror får aldrig bli det som
+  driver eller definierar produkten.
+- **Vi säljer aldrig användarens data** och exponerar den aldrig utan samtycke.
+- **Ingenting som kräver att användaren jämför sig till skada.**
+- **Fritextberoende "intelligens"** — systemets resonemang vilar alltid på
+  strukturerad data.
+- **Inget som kräver en manual för att förstås.**
 
 ---
 
 ## 12. Tech Stack (beslutad)
 
 - **Frontend:** Next.js, React, Tailwind CSS
-- **Backend:** Supabase (PostgreSQL, Auth, Storage)
+- **Backend:** Supabase (PostgreSQL, Auth, Storage; realtime för det sociala
+  lagret när det behövs)
 - **AI:** GPT och Claude som utbytbara motorer, embeddings + RAG för
-  resonemang kring användarens strukturerade data
+  resonemang kring användarens strukturerade data (och senare relevans i
+  nätverk/flöde)
 - **Princip:** Ingen modellspecifik låsning. AI-lagret abstraheras så att
   motor kan bytas utan att röra produktlogiken (se AI-princip 8.4).
 
@@ -141,7 +191,7 @@ Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
    beslut. Gissa inte åt produktägaren.
 3. **Minsta möjliga förändring.** Lös uppgiften, inget mer. Ingen
    spekulativ abstraktion, inga funktioner "medan vi ändå är här".
-4. **Följ sju-dagars-testet (6.1) innan du bygger något nytt.**
+4. **Följ värde-testet (6.1) innan du bygger något nytt.**
 5. **Definition of Done (avsnitt 10) gäller varje leverans.**
 
 ## 14. Kodstandard
@@ -166,5 +216,6 @@ Claude Code förväntas arbeta som en senior utvecklare, inte en ivrig junior:
 ## 16. Testning
 
 - Ny logik levereras med tester. Kritisk affärslogik (t.ex. hur en
-  beslutspost struktureras) ska ha automatiserade tester.
+  beslutspost struktureras, eller hur relevans/synlighet avgörs) ska ha
+  automatiserade tester.
 - Kör och verifiera lokalt innan leverans. Rapportera vad som testats.
