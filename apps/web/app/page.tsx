@@ -13,7 +13,7 @@ export default function Page() {
         <nav className="absolute right-6 top-6">
           <a
             href="/profile"
-            className="text-sm text-[var(--color-muted)] underline transition hover:text-[var(--color-ink)]"
+            className="rounded-full border border-[var(--color-line)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink)] shadow-sm transition hover:border-[var(--color-ink)]"
           >
             Min profil
           </a>
