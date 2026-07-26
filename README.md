@@ -43,7 +43,8 @@ Spegeln är Elevantlys tunnaste produkt. Den besvarar en enda användarfråga:
 **"Vad säger det jag faktiskt gjort om vad jag är bra på — och vilka roller
 det pekar mot?"** Du skriver fritt om vad du gjort i jobbet; AI:n strukturerar
 det till beslutsposter och speglar tillbaka en tolkning — där varje påstående
-är förankrat i din egen text ("Grundat på: …"). Inget sparas mellan besök.
+är förankrat i ett ordagrant citat ur din egen text ("Du skrev: …" för dina
+egna ord, "Tolkat från: …" för AI:ns tolkningar). Inget sparas mellan besök.
 
 Kravspecen finns i [`docs/spegeln-v1-spec.md`](./docs/spegeln-v1-spec.md).
 
@@ -109,7 +110,12 @@ npm run verify:e2e
 - **Körs inte i CI** (CI har ingen nyckel och ska inte kosta) — det är en manuell,
   lokal rutin.
 
-## Status
+## Status & roadmap
 
-Spegeln v1 under utveckling. Vi bygger den tunnaste möjliga produkten som
-skapar verkligt användarvärde innan vi bygger vidare.
+Spegeln v1 är byggd — den strukturerade kärnan med ärlig förankring, typade
+capabilities/ansvarsnivå och ett motoragnostiskt AI-lager. Härnäst: driftsättning,
+sedan konkreta marknadsinsikter.
+
+Se **[`docs/roadmap.md`](./docs/roadmap.md)** för vad som är byggt och den
+föreslagna ordningen framåt (varje punkt bär en namngiven användarfråga, inget
+bryter mot konstitutionen).
