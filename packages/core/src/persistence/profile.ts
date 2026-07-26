@@ -58,6 +58,19 @@ export interface PublicProfile {
 }
 
 /**
+ * En lätt sammanfattning av en offentlig profil för nätverksytor (t.ex. en lista
+ * kontakter eller förfrågningar). Innehåller `userId` — men detta är en
+ * SERVER-komposition för en redan autentiserad part i en relation, aldrig en
+ * publik yta. Klientytor visar namn/headline och länkar via `handle`.
+ */
+export interface PublicProfileSummary {
+  userId: string;
+  handle: string;
+  displayName: string | null;
+  headline: string | null;
+}
+
+/**
  * Lagring av användarprofiler. Rent gränssnitt — ingen kunskap om HTTP, React
  * eller en specifik databas. Implementationer: `InMemoryProfileRepository` och
  * `SupabaseProfileRepository` (med row-level security så att en användare bara
@@ -75,4 +88,18 @@ export interface ProfileRepository {
    * offentlig, annars `null`. Kräver ingen inloggning.
    */
   loadPublicProfileByHandle(handle: string): Promise<PublicProfile | null>;
+
+  /**
+   * Slår upp `userId` för innehavaren av ett OFFENTLIGT handle, eller `null`.
+   * Server-sidan behöver detta för att skapa en koppling (handle → userId) utan
+   * att någonsin skicka userId till klienten. Privata/okända handles → `null`.
+   */
+  findUserIdByPublicHandle(handle: string): Promise<string | null>;
+
+  /**
+   * Sammanfattningar av OFFENTLIGA profiler för en uppsättning userId:n — för
+   * att visa de andra parterna i en användares nätverk (kontakter/förfrågningar).
+   * Privata eller okända id:n utelämnas ur resultatet.
+   */
+  loadPublicSummariesByIds(userIds: string[]): Promise<PublicProfileSummary[]>;
 }

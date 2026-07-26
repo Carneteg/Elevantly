@@ -59,6 +59,7 @@ export type {
   ProfileRepository,
   StoredProfile,
   PublicProfile,
+  PublicProfileSummary,
   ProfileVisibility,
 } from "./persistence/profile";
 export {
@@ -67,3 +68,19 @@ export {
   MAX_PROFILE_DECISIONS,
 } from "./persistence/accumulateProfile";
 export { isValidHandle, normalizeHandle } from "./persistence/handle";
+
+// Kontakter: relationslagret (utbytbart lager — in-memory + Supabase)
+export { InMemoryConnectionRepository } from "./connections/inMemoryConnectionRepository";
+export { SupabaseConnectionRepository } from "./connections/supabaseConnectionRepository";
+export type { ConnectionRepository } from "./connections/connectionRepository";
+export type {
+  Connection,
+  ConnectionStatus,
+  RelationshipState,
+} from "./connections/connection";
+export {
+  canRequest,
+  relationshipState,
+  isParty,
+  otherParty,
+} from "./connections/connection";

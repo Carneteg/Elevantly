@@ -39,14 +39,22 @@ export default async function ProfilePage() {
             {user.email}
           </p>
         </div>
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="shrink-0 rounded-full border border-[var(--color-line)] px-4 py-2 text-sm text-[var(--color-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+        <div className="flex shrink-0 items-center gap-2">
+          <a
+            href="/network"
+            className="rounded-full border border-[var(--color-line)] px-4 py-2 text-sm text-[var(--color-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
           >
-            Logga ut
-          </button>
-        </form>
+            Nätverk
+          </a>
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              className="rounded-full border border-[var(--color-line)] px-4 py-2 text-sm text-[var(--color-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+            >
+              Logga ut
+            </button>
+          </form>
+        </div>
       </header>
 
       <section aria-labelledby="share-heading" className="mb-12">

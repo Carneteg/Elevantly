@@ -2,13 +2,15 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
   isValidHandle,
-  normalizeHandle,
+  relationshipState,
+  SupabaseConnectionRepository,
   SupabaseProfileRepository,
 } from "@elevantly/core";
-import type { PublicProfile } from "@elevantly/core";
+import type { PublicProfile, RelationshipState } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { DecisionList } from "@/components/DecisionList";
+import { ConnectButton } from "@/components/ConnectButton";
 
 /**
  * Publik profilsida — /u/handle. Den delbara vyn av en persons grundade
@@ -50,6 +52,35 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Räknar ut vilket tillstånd "Anslut"-knappen ska visa för den inloggade
+ * besökaren gentemot profilägaren. `signed_out` om ingen är inloggad. Ägarens
+ * userId löses upp på servern och skickas aldrig till klienten.
+ */
+async function loadConnectState(
+  handle: string,
+): Promise<RelationshipState | "signed_out"> {
+  if (!isSupabaseConfigured()) return "signed_out";
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return "signed_out";
+
+    const profiles = new SupabaseProfileRepository(supabase);
+    const ownerId = await profiles.findUserIdByPublicHandle(handle);
+    if (!ownerId) return "signed_out";
+    if (ownerId === user.id) return "self";
+
+    const connections = new SupabaseConnectionRepository(supabase);
+    const connection = await connections.findBetween(user.id, ownerId);
+    return relationshipState(connection, user.id, ownerId);
+  } catch {
+    return "signed_out";
+  }
+}
+
 export default async function PublicProfilePage({
   params,
 }: {
@@ -60,6 +91,7 @@ export default async function PublicProfilePage({
 
   if (!profile) notFound();
 
+  const connectState = await loadConnectState(handle);
   const name = profile.displayName ?? `@${profile.handle}`;
 
   return (
@@ -76,6 +108,9 @@ export default async function PublicProfilePage({
             {profile.headline}
           </p>
         )}
+        <div className="mt-5">
+          <ConnectButton handle={profile.handle} initialState={connectState} />
+        </div>
       </header>
 
       <section aria-label="Beslut och utfall">

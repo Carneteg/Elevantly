@@ -4,6 +4,7 @@ import type {
   ProfileRepository,
   ProfileVisibility,
   PublicProfile,
+  PublicProfileSummary,
   StoredProfile,
 } from "./profile";
 import { normalizeHandle } from "./handle";
@@ -22,6 +23,7 @@ const TABLE = "profiles";
 const COLUMNS =
   "user_id, decisions, visibility, handle, display_name, headline, created_at, updated_at";
 const PUBLIC_COLUMNS = "handle, display_name, headline, decisions";
+const SUMMARY_COLUMNS = "user_id, handle, display_name, headline";
 
 /** Radformen i databasen (snake_case, decisions som jsonb). */
 interface ProfileRow {
@@ -40,6 +42,13 @@ interface PublicRow {
   display_name: string | null;
   headline: string | null;
   decisions: Decision[];
+}
+
+interface SummaryRow {
+  user_id: string;
+  handle: string;
+  display_name: string | null;
+  headline: string | null;
 }
 
 export class SupabaseProfileRepository implements ProfileRepository {
@@ -91,6 +100,39 @@ export class SupabaseProfileRepository implements ProfileRepository {
     }
     return data ? publicRowToProfile(data) : null;
   }
+
+  async findUserIdByPublicHandle(handle: string): Promise<string | null> {
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select("user_id")
+      .eq("handle", normalizeHandle(handle))
+      .eq("visibility", "public")
+      .maybeSingle<{ user_id: string }>();
+
+    if (error) {
+      throw new Error(`Kunde inte slå upp handle: ${error.message}`);
+    }
+    return data ? data.user_id : null;
+  }
+
+  async loadPublicSummariesByIds(
+    userIds: string[],
+  ): Promise<PublicProfileSummary[]> {
+    if (userIds.length === 0) return [];
+
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(SUMMARY_COLUMNS)
+      .in("user_id", userIds)
+      .eq("visibility", "public")
+      .not("handle", "is", null)
+      .returns<SummaryRow[]>();
+
+    if (error) {
+      throw new Error(`Kunde inte läsa profil-sammanfattningar: ${error.message}`);
+    }
+    return (data ?? []).map(summaryRowToProfile);
+  }
 }
 
 function rowToProfile(row: ProfileRow): StoredProfile {
@@ -125,5 +167,14 @@ function publicRowToProfile(row: PublicRow): PublicProfile {
     displayName: row.display_name,
     headline: row.headline,
     decisions: row.decisions,
+  };
+}
+
+function summaryRowToProfile(row: SummaryRow): PublicProfileSummary {
+  return {
+    userId: row.user_id,
+    handle: row.handle,
+    displayName: row.display_name,
+    headline: row.headline,
   };
 }

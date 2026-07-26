@@ -51,10 +51,15 @@ till.
   spårbar källa), aldrig e-post eller `userId`, inga tomma titlar.
 - Nästa steg här: `contacts`-synlighet (endast kontakter) när kontakter finns.
 
-### 2. Kontakter & relationer
+### 2. Kontakter & relationer — 🔜 *pågår*
 **Användarfråga:** *"Kan jag bygga och nå mitt professionella nätverk?"*
-- Skicka/acceptera kontakt, se ömsesidiga kontakter. Riktiga relationer, inga
-  fåfänga-följarsiffror som produktens själ (CLAUDE.md 6.5, 11).
+- Skicka/acceptera/avböj kontakt, se dina kontakter. Ömsesidigt samtycke — inga
+  påtvingade följare, inga fåfänga-siffror som produktens själ (CLAUDE.md 6.5, 11).
+- Byggt: `Connection`-modell + ren tillståndslogik (`relationshipState`),
+  `ConnectionRepository` (in-memory + Supabase), migration `0003` (RLS: bara
+  parterna ser en rad), "Anslut" på `/u/handle` och en `/network`-sida.
+- **Avgränsning v1:** kopplingar sker via offentliga profiler (du ansluter från
+  någons `/u/handle`). "Privat-men-anslutningsbar" är ett senare beslut.
 
 ### 3. Professionellt flöde
 **Användarfråga:** *"Vad händer i mitt nätverk som är värt min tid?"*
