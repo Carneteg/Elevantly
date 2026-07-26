@@ -59,3 +59,8 @@ export type {
   ProfileRepository,
   StoredProfile,
 } from "./persistence/profile";
+export {
+  mergeDecisions,
+  upsertProfile,
+  MAX_PROFILE_DECISIONS,
+} from "./persistence/accumulateProfile";
