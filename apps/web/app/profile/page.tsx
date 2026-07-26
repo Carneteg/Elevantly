@@ -27,34 +27,14 @@ export default async function ProfilePage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-16">
-      <header className="mb-10 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-            Din profil
-          </p>
-          <h1 className="mt-3 text-3xl leading-tight font-semibold sm:text-4xl">
-            Vad du faktiskt gjort
-          </h1>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            {user.email}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <a
-            href="/network"
-            className="rounded-full border border-[var(--color-line)] px-4 py-2 text-sm text-[var(--color-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
-          >
-            Nätverk
-          </a>
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="rounded-full border border-[var(--color-line)] px-4 py-2 text-sm text-[var(--color-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
-            >
-              Logga ut
-            </button>
-          </form>
-        </div>
+      <header className="mb-10">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+          Din profil
+        </p>
+        <h1 className="mt-3 text-3xl leading-tight font-semibold sm:text-4xl">
+          Vad du faktiskt gjort
+        </h1>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">{user.email}</p>
       </header>
 
       <section aria-labelledby="share-heading" className="mb-12">
