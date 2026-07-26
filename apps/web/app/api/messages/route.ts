@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   isValidMessageBody,
+  SupabaseBlockRepository,
   SupabaseConnectionRepository,
   SupabaseMessageRepository,
   SupabaseProfileRepository,
@@ -55,11 +56,15 @@ export async function POST(
   const profiles = new SupabaseProfileRepository(supabase);
   const connections = new SupabaseConnectionRepository(supabase);
   const messages = new SupabaseMessageRepository(supabase);
+  const blocks = new SupabaseBlockRepository(supabase);
 
   try {
     const recipientId = await profiles.findUserIdByPublicHandle(handle);
     if (!recipientId) {
       return jsonError("Mottagaren hittades inte.", 404);
+    }
+    if (await blocks.isBlockedBetween(user.id, recipientId)) {
+      return jsonError("Det går inte att skicka meddelande till den här användaren.", 403);
     }
     const connection = await connections.findBetween(user.id, recipientId);
     if (!connection || connection.status !== "accepted") {

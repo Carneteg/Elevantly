@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import {
   isValidHandle,
   relationshipState,
+  SupabaseBlockRepository,
   SupabaseConnectionRepository,
   SupabaseProfileRepository,
 } from "@elevantly/core";
@@ -12,6 +13,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { DecisionList } from "@/components/DecisionList";
 import { ConnectButton } from "@/components/ConnectButton";
 import { ReportButton } from "@/components/ReportButton";
+import { BlockButton } from "@/components/BlockButton";
 
 /**
  * Publik profilsida — /u/handle. Den delbara vyn av en persons grundade
@@ -53,32 +55,47 @@ export async function generateMetadata({
   };
 }
 
+interface ViewerContext {
+  connectState: RelationshipState | "signed_out";
+  iBlocked: boolean;
+}
+
 /**
- * Räknar ut vilket tillstånd "Anslut"-knappen ska visa för den inloggade
- * besökaren gentemot profilägaren. `signed_out` om ingen är inloggad. Ägarens
- * userId löses upp på servern och skickas aldrig till klienten.
+ * Räknar ut den inloggade besökarens läge gentemot profilägaren: vilket tillstånd
+ * "Anslut"-knappen ska visa, och om besökaren har blockerat ägaren. `signed_out`
+ * om ingen är inloggad. Ägarens userId löses upp på servern och skickas aldrig
+ * till klienten.
  */
-async function loadConnectState(
-  handle: string,
-): Promise<RelationshipState | "signed_out"> {
-  if (!isSupabaseConfigured()) return "signed_out";
+async function loadViewerContext(handle: string): Promise<ViewerContext> {
+  const signedOut: ViewerContext = {
+    connectState: "signed_out",
+    iBlocked: false,
+  };
+  if (!isSupabaseConfigured()) return signedOut;
   try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return "signed_out";
+    if (!user) return signedOut;
 
     const profiles = new SupabaseProfileRepository(supabase);
     const ownerId = await profiles.findUserIdByPublicHandle(handle);
-    if (!ownerId) return "signed_out";
-    if (ownerId === user.id) return "self";
+    if (!ownerId) return signedOut;
+    if (ownerId === user.id) return { connectState: "self", iBlocked: false };
 
+    const blocks = new SupabaseBlockRepository(supabase);
     const connections = new SupabaseConnectionRepository(supabase);
-    const connection = await connections.findBetween(user.id, ownerId);
-    return relationshipState(connection, user.id, ownerId);
+    const [iBlocked, connection] = await Promise.all([
+      blocks.hasBlocked(user.id, ownerId),
+      connections.findBetween(user.id, ownerId),
+    ]);
+    return {
+      connectState: relationshipState(connection, user.id, ownerId),
+      iBlocked,
+    };
   } catch {
-    return "signed_out";
+    return signedOut;
   }
 }
 
@@ -92,8 +109,10 @@ export default async function PublicProfilePage({
 
   if (!profile) notFound();
 
-  const connectState = await loadConnectState(handle);
+  const { connectState, iBlocked } = await loadViewerContext(handle);
   const name = profile.displayName ?? `@${profile.handle}`;
+  const signedInVisitor =
+    connectState !== "self" && connectState !== "signed_out";
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-16">
@@ -110,7 +129,13 @@ export default async function PublicProfilePage({
           </p>
         )}
         <div className="mt-5">
-          <ConnectButton handle={profile.handle} initialState={connectState} />
+          {iBlocked ? (
+            <p className="text-sm text-[var(--color-muted)]">
+              Du har blockerat den här personen. Ni kan inte kontakta varandra.
+            </p>
+          ) : (
+            <ConnectButton handle={profile.handle} initialState={connectState} />
+          )}
         </div>
       </header>
 
@@ -136,8 +161,11 @@ export default async function PublicProfilePage({
           Byggd på grundad, strukturerad substans — inget visas som fakta utan
           spårbar källa.
         </p>
-        {connectState !== "self" && connectState !== "signed_out" && (
-          <ReportButton subjectType="profile" subjectId={profile.handle} />
+        {signedInVisitor && (
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <ReportButton subjectType="profile" subjectId={profile.handle} />
+            <BlockButton handle={profile.handle} initiallyBlocked={iBlocked} />
+          </div>
         )}
       </footer>
     </main>

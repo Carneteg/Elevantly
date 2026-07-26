@@ -91,9 +91,13 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
   `ReportRepository` (in-memory + Supabase), migration `0006` (RLS: skapa i eget
   namn, ingen läsning för vanliga användare — granskning via service-role),
   `ReportButton` på profiler och inlägg. En envägssignal in till granskning.
-- Nästa: blockering (missbruksskydd) med integritetsbevarande upprätthållande
-  (kräver en `security definer`-hjälpfunktion så man inte kan avläsa att man
-  blockerats), samt en granskningsvy.
+- Byggt (andra bricken): **blockering**. `Block`-modell + `BlockRepository`
+  (in-memory + Supabase), migration `0007` (RLS: se bara egna blockeringar +
+  `security definer`-funktionen `is_blocked_with` som svarar ömsesidigt utan att
+  avslöja att man blockerats). Blockering bryter befintlig koppling och nekar nya
+  meddelanden/förfrågningar (upprätthålls i rutterna). `BlockButton` på `/u/handle`.
+- Nästa: en **granskningsvy** för rapporter/blockeringar (admin), och att lyfta
+  blockering till DB-nivå (RLS på inlägg/meddelanden) som djupare försvar.
 
 ---
 

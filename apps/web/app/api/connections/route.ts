@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  SupabaseBlockRepository,
   SupabaseConnectionRepository,
   SupabaseProfileRepository,
 } from "@elevantly/core";
@@ -59,6 +60,10 @@ export async function POST(
       }
       if (addresseeId === user.id) {
         return jsonError("Du kan inte ansluta till dig själv.", 400);
+      }
+      const blocks = new SupabaseBlockRepository(supabase);
+      if (await blocks.isBlockedBetween(user.id, addresseeId)) {
+        return jsonError("Det går inte att ansluta till den här användaren.", 403);
       }
       const existing = await connections.findBetween(user.id, addresseeId);
       if (existing) {

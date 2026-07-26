@@ -121,3 +121,9 @@ export {
   normalizeReason,
   MAX_REPORT_REASON,
 } from "./moderation/report";
+
+// Trust & safety: blockering (utbytbart lager — in-memory + Supabase)
+export { InMemoryBlockRepository } from "./moderation/inMemoryBlockRepository";
+export { SupabaseBlockRepository } from "./moderation/supabaseBlockRepository";
+export type { BlockRepository } from "./moderation/blockRepository";
+export type { Block } from "./moderation/block";
