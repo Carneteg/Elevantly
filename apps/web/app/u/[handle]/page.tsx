@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { DecisionList } from "@/components/DecisionList";
 import { ConnectButton } from "@/components/ConnectButton";
+import { ReportButton } from "@/components/ReportButton";
 
 /**
  * Publik profilsida — /u/handle. Den delbara vyn av en persons grundade
@@ -130,11 +131,14 @@ export default async function PublicProfilePage({
         )}
       </section>
 
-      <footer className="mt-12 border-t border-[var(--color-line)] pt-6 text-sm text-[var(--color-muted)]">
-        <p>
+      <footer className="mt-12 flex items-start justify-between gap-4 border-t border-[var(--color-line)] pt-6 text-sm text-[var(--color-muted)]">
+        <p className="max-w-md">
           Byggd på grundad, strukturerad substans — inget visas som fakta utan
           spårbar källa.
         </p>
+        {connectState !== "self" && connectState !== "signed_out" && (
+          <ReportButton subjectType="profile" subjectId={profile.handle} />
+        )}
       </footer>
     </main>
   );

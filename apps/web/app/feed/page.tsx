@@ -9,6 +9,7 @@ import type { Post, PublicProfileSummary } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { PostComposer } from "@/components/PostComposer";
 import { PostActions } from "@/components/PostActions";
+import { ReportButton } from "@/components/ReportButton";
 
 /**
  * Flöde — dela något med ditt nätverk och se vad dina kontakter delar. Skyddad
@@ -110,6 +111,11 @@ function PostCard({
       <p className="mt-3 whitespace-pre-wrap break-words leading-snug">
         {post.body}
       </p>
+      {!isOwn && (
+        <div className="mt-3">
+          <ReportButton subjectType="post" subjectId={post.id} />
+        </div>
+      )}
     </article>
   );
 }

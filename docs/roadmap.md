@@ -84,9 +84,16 @@ till.
 - Matcha profil mot roller/samarbeten — bygger på den grundade datan och
   (senare) marknadsinsikter.
 
-### Tvärgående: trust & safety
+### Tvärgående: trust & safety — 🔜 *pågår*
 Ett socialt lager kräver **moderering, rapportering och missbruksskydd** från
 start — förtroende är produkten. Planeras in parallellt, inte som eftertanke.
+- Byggt (första bricken): **rapportering**. `Report`-modell + validering,
+  `ReportRepository` (in-memory + Supabase), migration `0006` (RLS: skapa i eget
+  namn, ingen läsning för vanliga användare — granskning via service-role),
+  `ReportButton` på profiler och inlägg. En envägssignal in till granskning.
+- Nästa: blockering (missbruksskydd) med integritetsbevarande upprätthållande
+  (kräver en `security definer`-hjälpfunktion så man inte kan avläsa att man
+  blockerats), samt en granskningsvy.
 
 ---
 

@@ -109,3 +109,15 @@ export {
   involvesBoth,
   MAX_MESSAGE_LENGTH,
 } from "./messaging/message";
+
+// Trust & safety: rapportering (utbytbart lager — in-memory + Supabase)
+export { InMemoryReportRepository } from "./moderation/inMemoryReportRepository";
+export { SupabaseReportRepository } from "./moderation/supabaseReportRepository";
+export type { ReportRepository } from "./moderation/reportRepository";
+export type { Report, ReportSubjectType } from "./moderation/report";
+export {
+  isReportSubjectType,
+  isValidReport,
+  normalizeReason,
+  MAX_REPORT_REASON,
+} from "./moderation/report";
