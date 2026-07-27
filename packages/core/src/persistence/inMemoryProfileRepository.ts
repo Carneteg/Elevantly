@@ -1,4 +1,10 @@
-import type { ProfileRepository, StoredProfile } from "./profile";
+import type {
+  ProfileRepository,
+  PublicProfile,
+  PublicProfileSummary,
+  StoredProfile,
+} from "./profile";
+import { normalizeHandle } from "./handle";
 
 /**
  * In-memory-implementation av ProfileRepository.
@@ -28,6 +34,63 @@ export class InMemoryProfileRepository implements ProfileRepository {
 
   async delete(userId: string): Promise<void> {
     this.store.delete(userId);
+  }
+
+  async loadPublicProfileByHandle(
+    handle: string,
+  ): Promise<PublicProfile | null> {
+    const wanted = normalizeHandle(handle);
+    for (const profile of this.store.values()) {
+      if (
+        profile.visibility === "public" &&
+        profile.handle &&
+        normalizeHandle(profile.handle) === wanted
+      ) {
+        return {
+          handle: profile.handle,
+          displayName: profile.displayName ?? null,
+          headline: profile.headline ?? null,
+          decisions: structuredClone(profile.decisions),
+        };
+      }
+    }
+    return null;
+  }
+
+  async findUserIdByPublicHandle(handle: string): Promise<string | null> {
+    const wanted = normalizeHandle(handle);
+    for (const profile of this.store.values()) {
+      if (
+        profile.visibility === "public" &&
+        profile.handle &&
+        normalizeHandle(profile.handle) === wanted
+      ) {
+        return profile.userId;
+      }
+    }
+    return null;
+  }
+
+  async loadPublicSummariesByIds(
+    userIds: string[],
+  ): Promise<PublicProfileSummary[]> {
+    const wanted = new Set(userIds);
+    const summaries: PublicProfileSummary[] = [];
+    for (const profile of this.store.values()) {
+      if (
+        wanted.has(profile.userId) &&
+        profile.visibility === "public" &&
+        profile.handle
+      ) {
+        summaries.push({
+          userId: profile.userId,
+          handle: profile.handle,
+          displayName: profile.displayName ?? null,
+          headline: profile.headline ?? null,
+        });
+      }
+    }
+    return summaries;
   }
 }
 

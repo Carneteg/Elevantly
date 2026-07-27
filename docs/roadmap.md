@@ -28,49 +28,90 @@ bra på — och vilka roller det pekar mot?"*
 - Motoragnostiskt AI-lager (`ClaudeEngine` + `GptEngine`), robusthet (rate
   limit, parser-gränser), CI + e2e-verifiering.
 
-## 🔜 Pågår — konton & persistens (förutsättning för allt socialt)
+## ✅ Byggt — konton & persistens (förutsättning för allt socialt)
 
 **Användarfråga:** *"Får jag tillbaka min profil och kan bygga vidare på den
 mellan besök?"* En sparad, ägd identitet är fundamentet man knyter nätverket
 till.
 
-- `ProfileRepository` + Supabase-scaffolding (migration + RLS) — *i granskning.*
-- Kvar: auth (magisk länk) + inloggningsyta + ackumulera-flödet.
+- `ProfileRepository` + Supabase (migration `0001` + RLS), auth (magisk länk),
+  inloggningsyta och ackumulera-flödet (`upsertProfile`).
 
 ---
 
 ## 🗺️ Det sociala lagret (ny riktning — föreslagen ordning)
 
-### 1. Publik / synlig profil
+### 1. Publik / synlig profil — 🔜 *pågår*
 **Användarfråga:** *"Kan andra hitta och förstå mitt professionella värde?"*
-- Din grundade profil blir visningsbar, med **synlighetskontroll** (privat /
-  endast kontakter / offentlig) — samtycke och kontroll enligt CLAUDE.md 9.
-- Substans över fåfänga: profilen visar bevisade beslut/utfall, inte tomma
-  titlar.
+- Din grundade profil blir visningsbar via en delbar länk (`/u/handle`), med
+  **synlighetskontroll** — default privat, offentlig är ett uttryckligt opt-in
+  (CLAUDE.md 9.3). Migration `0002` (visibility/handle/profiltext + RLS
+  public-read), profil-editor och den publika profilsidan.
+- Substans över fåfänga: profilen visar bevisade beslut/utfall (bara poster med
+  spårbar källa), aldrig e-post eller `userId`, inga tomma titlar.
+- Nästa steg här: `contacts`-synlighet (endast kontakter) när kontakter finns.
 
-### 2. Kontakter & relationer
+### 2. Kontakter & relationer — 🔜 *pågår*
 **Användarfråga:** *"Kan jag bygga och nå mitt professionella nätverk?"*
-- Skicka/acceptera kontakt, se ömsesidiga kontakter. Riktiga relationer, inga
-  fåfänga-följarsiffror som produktens själ (CLAUDE.md 6.5, 11).
+- Skicka/acceptera/avböj kontakt, se dina kontakter. Ömsesidigt samtycke — inga
+  påtvingade följare, inga fåfänga-siffror som produktens själ (CLAUDE.md 6.5, 11).
+- Byggt: `Connection`-modell + ren tillståndslogik (`relationshipState`),
+  `ConnectionRepository` (in-memory + Supabase), migration `0003` (RLS: bara
+  parterna ser en rad), "Anslut" på `/u/handle` och en `/network`-sida.
+- **Avgränsning v1:** kopplingar sker via offentliga profiler (du ansluter från
+  någons `/u/handle`). "Privat-men-anslutningsbar" är ett senare beslut.
 
-### 3. Professionellt flöde
+### 3. Professionellt flöde — 🔜 *pågår*
 **Användarfråga:** *"Vad händer i mitt nätverk som är värt min tid?"*
-- Dela uppdateringar/insikter; se relevant innehåll från nätverket.
-- **Förklarbar rankning** som tjänar professionellt värde, inte enbart
-  engagemang (CLAUDE.md 8.5). Inga mörka mönster (CLAUDE.md 11).
+- Dela uppdateringar/insikter; se innehåll från dina accepterade kontakter.
+- Byggt: `Post`-modell + ren, **förklarbar ordning** (`orderFeed`, kronologisk
+  nyast först — CLAUDE.md 8.5), `PostRepository` (in-memory + Supabase), migration
+  `0004` (RLS: syns för författaren + accepterade kontakter), `/feed` med
+  lågfriktions-kompositor. Inga mörka mönster, ingen doomscroll-optimering (§11).
+- Senare: koppla inlägg till en `Decision` för grundade inlägg; rikare relevans.
 
-### 4. Meddelanden
+### 4. Meddelanden — 🔜 *pågår*
 **Användarfråga:** *"Kan jag ta ett samtal med rätt person?"*
-- Direkt kommunikation mellan kontakter.
+- Direkt 1:1-kommunikation mellan accepterade kontakter.
+- Byggt: `Message`-modell + ren logik (`orderThread`, `involvesBoth`, validering),
+  `MessageRepository` (in-memory + Supabase), migration `0005` (RLS: bara parterna
+  ser; skicka bara till accepterad kontakt; tabellen i realtidspubliceringen).
+  `/messages` (samtal = kontakter), `/messages/[handle]` (live tråd via Supabase
+  Realtime + kompositor), "Meddela" på kontakter. Strikt privat (§9).
 
 ### 5. Möjligheter
 **Användarfråga:** *"Vilka roller/samarbeten passar det jag faktiskt gjort?"*
 - Matcha profil mot roller/samarbeten — bygger på den grundade datan och
   (senare) marknadsinsikter.
 
-### Tvärgående: trust & safety
+### Tvärgående: trust & safety — 🔜 *pågår*
 Ett socialt lager kräver **moderering, rapportering och missbruksskydd** från
 start — förtroende är produkten. Planeras in parallellt, inte som eftertanke.
+- Byggt (första bricken): **rapportering**. `Report`-modell + validering,
+  `ReportRepository` (in-memory + Supabase), migration `0006` (RLS: skapa i eget
+  namn, ingen läsning för vanliga användare — granskning via service-role),
+  `ReportButton` på profiler och inlägg. En envägssignal in till granskning.
+- Byggt (andra bricken): **blockering**. `Block`-modell + `BlockRepository`
+  (in-memory + Supabase), migration `0007` (RLS: se bara egna blockeringar +
+  `security definer`-funktionen `is_blocked_with` som svarar ömsesidigt utan att
+  avslöja att man blockerats). Blockering bryter befintlig koppling och nekar nya
+  meddelanden/förfrågningar (upprätthålls i rutterna). `BlockButton` på `/u/handle`.
+- Nästa: en **granskningsvy** för rapporter/blockeringar (admin), och att lyfta
+  blockering till DB-nivå (RLS på inlägg/meddelanden) som djupare försvar.
+
+### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
+**Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med
+persondata i flera lager (profil, kopplingar, flöde, meddelanden, blockeringar)
+är dataägande inte en eftertanke (CLAUDE.md 9.2).
+- **Exportera:** `listAllForUser` på kopplings- och meddelanderepot + en
+  session-bunden `GET /api/account/export` som samlar profil, beslut, kopplingar,
+  inlägg, meddelanden och blockeringar till en nedladdningsbar JSON-fil (RLS: bara
+  din egen data).
+- **Radera konto:** migration `0008` — en `security definer`-funktion
+  `delete_my_account()` som raderar den inloggade användarens `auth.users`-rad;
+  `on delete cascade` (0001–0007) tar bort resten. Ingen service-role-nyckel
+  (CLAUDE.md 14). `POST /api/account/delete` + en "Din data"-sektion på
+  profilsidan (exportknapp + radering med RADERA-bekräftelse).
 
 ---
 

@@ -1,24 +1,13 @@
 import { Spegeln } from "@/components/Spegeln";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 /**
  * Spegeln — startskärmen. Ett tydligt fokus: beskriv vad du gjort, få tillbaka
- * vad det säger om vad du är bra på och vilka roller det pekar mot. Är konton
- * påslagna finns en diskret länk till din profil.
+ * vad det säger om vad du är bra på och vilka roller det pekar mot. Navigering
+ * (profil, nätverk, inloggning) ligger i den globala toppnaven.
  */
 export default function Page() {
   return (
-    <main className="relative mx-auto flex min-h-dvh max-w-2xl flex-col justify-center px-6 py-16">
-      {isSupabaseConfigured() && (
-        <nav className="absolute right-6 top-6">
-          <a
-            href="/profile"
-            className="rounded-full border border-[var(--color-line)] bg-white px-4 py-2 text-sm font-medium text-[var(--color-ink)] shadow-sm transition hover:border-[var(--color-ink)]"
-          >
-            Min profil
-          </a>
-        </nav>
-      )}
+    <main className="relative mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-2xl flex-col justify-center px-6 py-16">
       <header className="mb-10">
         <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
           Spegeln

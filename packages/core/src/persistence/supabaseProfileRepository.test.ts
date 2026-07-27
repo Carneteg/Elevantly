@@ -74,6 +74,7 @@ function profile(userId: string): StoredProfile {
   return {
     userId,
     decisions: [DECISION],
+    visibility: "private",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-02-02T00:00:00.000Z",
   };
@@ -86,6 +87,10 @@ describe("SupabaseProfileRepository", () => {
         data: {
           user_id: "user-1",
           decisions: [DECISION],
+          visibility: "public",
+          handle: "tobias",
+          display_name: "Tobias",
+          headline: "Produktledare",
           created_at: "2026-01-01T00:00:00.000Z",
           updated_at: "2026-02-02T00:00:00.000Z",
         },
@@ -100,6 +105,10 @@ describe("SupabaseProfileRepository", () => {
     expect(loaded).toEqual({
       userId: "user-1",
       decisions: [DECISION],
+      visibility: "public",
+      handle: "tobias",
+      displayName: "Tobias",
+      headline: "Produktledare",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-02-02T00:00:00.000Z",
     });
@@ -128,6 +137,10 @@ describe("SupabaseProfileRepository", () => {
     expect(calls.upsertRow).toEqual({
       user_id: "user-1",
       decisions: [DECISION],
+      visibility: "private",
+      handle: null,
+      display_name: null,
+      headline: null,
       created_at: "2026-01-01T00:00:00.000Z",
       updated_at: "2026-02-02T00:00:00.000Z",
     });

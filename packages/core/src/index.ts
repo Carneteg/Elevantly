@@ -58,9 +58,72 @@ export { SupabaseProfileRepository } from "./persistence/supabaseProfileReposito
 export type {
   ProfileRepository,
   StoredProfile,
+  PublicProfile,
+  PublicProfileSummary,
+  ProfileVisibility,
 } from "./persistence/profile";
 export {
   mergeDecisions,
   upsertProfile,
   MAX_PROFILE_DECISIONS,
 } from "./persistence/accumulateProfile";
+export { isValidHandle, normalizeHandle } from "./persistence/handle";
+
+// Kontakter: relationslagret (utbytbart lager — in-memory + Supabase)
+export { InMemoryConnectionRepository } from "./connections/inMemoryConnectionRepository";
+export { SupabaseConnectionRepository } from "./connections/supabaseConnectionRepository";
+export type { ConnectionRepository } from "./connections/connectionRepository";
+export type {
+  Connection,
+  ConnectionStatus,
+  RelationshipState,
+} from "./connections/connection";
+export {
+  canRequest,
+  relationshipState,
+  isParty,
+  otherParty,
+} from "./connections/connection";
+
+// Flöde: det professionella innehållslagret (utbytbart lager — in-memory + Supabase)
+export { InMemoryPostRepository } from "./feed/inMemoryPostRepository";
+export { SupabasePostRepository } from "./feed/supabasePostRepository";
+export type { PostRepository } from "./feed/postRepository";
+export type { Post } from "./feed/post";
+export {
+  isValidPostBody,
+  normalizePostBody,
+  orderFeed,
+  MAX_POST_LENGTH,
+} from "./feed/post";
+
+// Meddelanden: det privata 1:1-lagret (utbytbart lager — in-memory + Supabase)
+export { InMemoryMessageRepository } from "./messaging/inMemoryMessageRepository";
+export { SupabaseMessageRepository } from "./messaging/supabaseMessageRepository";
+export type { MessageRepository } from "./messaging/messageRepository";
+export type { Message } from "./messaging/message";
+export {
+  isValidMessageBody,
+  normalizeMessageBody,
+  orderThread,
+  involvesBoth,
+  MAX_MESSAGE_LENGTH,
+} from "./messaging/message";
+
+// Trust & safety: rapportering (utbytbart lager — in-memory + Supabase)
+export { InMemoryReportRepository } from "./moderation/inMemoryReportRepository";
+export { SupabaseReportRepository } from "./moderation/supabaseReportRepository";
+export type { ReportRepository } from "./moderation/reportRepository";
+export type { Report, ReportSubjectType } from "./moderation/report";
+export {
+  isReportSubjectType,
+  isValidReport,
+  normalizeReason,
+  MAX_REPORT_REASON,
+} from "./moderation/report";
+
+// Trust & safety: blockering (utbytbart lager — in-memory + Supabase)
+export { InMemoryBlockRepository } from "./moderation/inMemoryBlockRepository";
+export { SupabaseBlockRepository } from "./moderation/supabaseBlockRepository";
+export type { BlockRepository } from "./moderation/blockRepository";
+export type { Block } from "./moderation/block";

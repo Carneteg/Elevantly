@@ -69,15 +69,16 @@ export function upsertProfile(
     return {
       userId,
       decisions: mergeDecisions([], incoming),
+      visibility: "private",
       createdAt: now,
       updatedAt: now,
     };
   }
 
+  // Bevarar profiltext/synlighet; slår bara ihop besluten och bumpar tiden.
   return {
-    userId: existing.userId,
+    ...existing,
     decisions: mergeDecisions(existing.decisions, incoming),
-    createdAt: existing.createdAt,
     updatedAt: now,
   };
 }

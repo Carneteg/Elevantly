@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { SupabaseProfileRepository } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { DecisionList } from "@/components/DecisionList";
+import { ProfileEditor } from "@/components/ProfileEditor";
+import { AccountData } from "@/components/AccountData";
 
 /**
  * Din profil — den grundade, strukturerade kärnan som ackumuleras mellan besök.
@@ -26,27 +28,31 @@ export default async function ProfilePage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-16">
-      <header className="mb-10 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-            Din profil
-          </p>
-          <h1 className="mt-3 text-3xl leading-tight font-semibold sm:text-4xl">
-            Vad du faktiskt gjort
-          </h1>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            {user.email}
-          </p>
-        </div>
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="shrink-0 rounded-full border border-[var(--color-line)] px-4 py-2 text-sm text-[var(--color-muted)] transition hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
-          >
-            Logga ut
-          </button>
-        </form>
+      <header className="mb-10">
+        <p className="text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+          Din profil
+        </p>
+        <h1 className="mt-3 text-3xl leading-tight font-semibold sm:text-4xl">
+          Vad du faktiskt gjort
+        </h1>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">{user.email}</p>
       </header>
+
+      <section aria-labelledby="share-heading" className="mb-12">
+        <h2 id="share-heading" className="mb-2 text-xl font-semibold">
+          Din delbara profil
+        </h2>
+        <p className="mb-4 text-sm text-[var(--color-muted)]">
+          Välj ett användarnamn och gör profilen offentlig när du vill dela den.
+          Den är privat tills du väljer annat.
+        </p>
+        <ProfileEditor
+          initialHandle={profile?.handle ?? ""}
+          initialDisplayName={profile?.displayName ?? ""}
+          initialHeadline={profile?.headline ?? ""}
+          initialVisibility={profile?.visibility ?? "private"}
+        />
+      </section>
 
       {decisions.length === 0 ? (
         <div className="rounded-2xl border border-[var(--color-line)] bg-white/50 p-6">
@@ -77,6 +83,8 @@ export default async function ProfilePage() {
           </p>
         </>
       )}
+
+      <AccountData />
     </main>
   );
 }
