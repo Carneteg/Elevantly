@@ -55,6 +55,7 @@ export function upsertProfile(
       userId,
       decisions: mergeDecisions([], incoming),
       visibility: "private",
+      discoverableByRecruiters: false,
       createdAt: now,
       updatedAt: now,
     };

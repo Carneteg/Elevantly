@@ -59,6 +59,7 @@ export default async function ProfilePage() {
           initialDisplayName={profile?.displayName ?? ""}
           initialHeadline={profile?.headline ?? ""}
           initialVisibility={profile?.visibility ?? "private"}
+          initialDiscoverable={profile?.discoverableByRecruiters ?? false}
         />
       </section>
 

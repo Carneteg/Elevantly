@@ -126,7 +126,22 @@ migration av besluten). Nytt: `attestations`-tabell + RLS + security-definer-fun
 (migration 0017), core-modulen `attestation/`, `AttestButton` på `/u/[handle]` och en
 inkorg på `/profile`. Attesterarens namn visas bara om deras egen profil är offentlig —
 en privat identitet läcker aldrig, men motiveringen (substansen) visas alltid.
-Nästa skivor: desktop-3-kolumnsram, kontextförankring (`◐`), rekryterarsök.
+
+**Byggt (fas 7-3): rekryterarsöket (Del 4, intäktssidan).** Nu finns anledningen att
+attestera: en **företagsmedlem** (arbetsgivarsidan) söker på en kompetens och får
+kandidater rankade på **bevisade beslut** — med ett filter för **endast attesterad
+erfarenhet** (●). Två grindar skyddar individen: profilen måste vara *offentlig* OCH
+aktivt ha valt att synas i sök (ett separat, informerat opt-in — §9.3; "offentlig"
+räcker inte). Söket vilar på samma anti-djungel som jobbmatchningen: söktermen och
+kandidaternas kompetenser kanoniseras till samma begrepp (delad `aggregateCandidateSkills`,
+ny ren `searchCandidates` som inverterar `matchJobs`). Nytt: kolumn
+`discoverable_by_recruiters` (migration 0018, app-lager-opt-in — ingen ny RLS, en offentlig
+rad är redan läsbar), `listDiscoverableProfiles` på profil-repot, sidan `/recruiter/search`
+(bara företagsmedlemmar, annars → `/company`), och ett opt-in-val i profil-editorn.
+Attesteringar läses per person, så attesterad-status hämtas bara för de högst rankade
+träffarna — en ärlig avgränsning som visas för rekryteraren; ingen `userId` lämnar servern.
+Nästa skivor: desktop-3-kolumnsram, kontextförankring (`◐`), och en batch-väg för
+attesteringsstatus när volymen kräver det.
 
 ### Del 1 — Desktop-ramen (skalet)
 Idag är UI:t låst i mobilkolumn. På desktop (≥1024px) går vi från en till **tre
@@ -170,7 +185,12 @@ före/efter"). Antalet attesteringar en person kan ge är **medvetet och synligt
 begränsat** — knappheten är designad, vilket gör varje attestering socialt "dyr" och
 därmed trovärdig.
 
-### Del 4 — Rekryterarens sökvy (intäktssidan)
+### Del 4 — Rekryterarens sökvy (intäktssidan) — v1 byggd (fas 7-3)
+En första, tunn skiva finns: `/recruiter/search` (företagsmedlemmar), sök på kompetens,
+rankning på bevisade beslut och filtret **endast attesterad erfarenhet**. Kvar som
+senare fördjupning: den fulla desktop-verktygsramen (mitten = resultat, sidor = filter),
+fler filter och en batch-väg för bevisstatus. Ursprunglig avsikt nedan.
+
 Intäkten kommer från efterfrågesidan → desktop behöver en **upptäcktsvy för
 rekryterare** som känns som ett *verktyg*, inte ett flöde. Mitten = resultatlista av
 profiler; sidorna = filter. Det avgörande filtret och vår faktiska produktvara:

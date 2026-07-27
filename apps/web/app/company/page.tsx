@@ -35,6 +35,14 @@ export default async function CompanyPage() {
           Skapa ett företag för att kunna annonsera jobb. Kandidater matchas mot
           jobbens faktiska krav — inte nyckelord.
         </p>
+        {companies.length > 0 && (
+          <a
+            href="/recruiter/search"
+            className="mt-4 inline-block rounded-full bg-[var(--color-accent)] px-6 py-3 font-medium text-white"
+          >
+            Sök kandidater →
+          </a>
+        )}
       </header>
 
       {companies.length > 0 && (

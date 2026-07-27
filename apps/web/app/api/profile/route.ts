@@ -95,13 +95,21 @@ export async function POST(
     userId: user.id,
     decisions: [],
     visibility: "private",
+    discoverableByRecruiters: false,
     createdAt: now,
     updatedAt: now,
   };
 
+  // Opt-in för rekryterarsök. Invarianten upprätthålls här, server-sidan:
+  // upptäckbar kan bara vara sann på en OFFENTLIG profil (CLAUDE.md 9.3) —
+  // oavsett vad klienten skickar.
+  const wantsDiscoverable = body.discoverableByRecruiters === true;
+  const discoverableByRecruiters = visibility === "public" && wantsDiscoverable;
+
   const updated: StoredProfile = {
     ...base,
     visibility,
+    discoverableByRecruiters,
     ...(handle ? { handle } : { handle: undefined }),
     ...(displayName ? { displayName } : { displayName: undefined }),
     ...(headline ? { headline } : { headline: undefined }),

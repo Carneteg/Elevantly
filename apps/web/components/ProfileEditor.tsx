@@ -10,6 +10,7 @@ interface ProfileEditorProps {
   initialDisplayName: string;
   initialHeadline: string;
   initialVisibility: ProfileVisibility;
+  initialDiscoverable: boolean;
 }
 
 /**
@@ -22,17 +23,22 @@ export function ProfileEditor({
   initialDisplayName,
   initialHeadline,
   initialVisibility,
+  initialDiscoverable,
 }: ProfileEditorProps) {
   const [handle, setHandle] = useState(initialHandle);
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [headline, setHeadline] = useState(initialHeadline);
   const [visibility, setVisibility] =
     useState<ProfileVisibility>(initialVisibility);
+  const [discoverable, setDiscoverable] = useState(initialDiscoverable);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
 
   const isPublic = visibility === "public";
   const isPrivate = visibility === "private";
+  // Opt-in för rekryterarsök är bara meningsfullt på en offentlig profil (§9.3);
+  // servern upprätthåller samma invariant oavsett vad som skickas.
+  const discoverableEffective = isPublic && discoverable;
 
   const savedMessage: Record<ProfileVisibility, string> = {
     private: "Sparat. Din profil är privat.",
@@ -49,7 +55,13 @@ export function ProfileEditor({
       const response = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle, displayName, headline, visibility }),
+        body: JSON.stringify({
+          handle,
+          displayName,
+          headline,
+          visibility,
+          discoverableByRecruiters: discoverableEffective,
+        }),
       });
       const data = (await response.json()) as {
         error?: string;
@@ -178,6 +190,28 @@ export function ProfileEditor({
             <span className="font-medium">Offentlig</span>
             <span className="block text-sm text-[var(--color-muted)]">
               Vem som helst med länken ser namn, headline och dina beslut.
+            </span>
+          </span>
+        </label>
+
+        <label
+          className={`ml-6 flex items-start gap-3 rounded-xl border border-[var(--color-line)] bg-white p-3 ${
+            isPublic ? "" : "opacity-50"
+          }`}
+        >
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={discoverableEffective}
+            disabled={!isPublic}
+            onChange={(e) => setDiscoverable(e.target.checked)}
+          />
+          <span>
+            <span className="font-medium">Synlig i rekryterarsök</span>
+            <span className="block text-sm text-[var(--color-muted)]">
+              {isPublic
+                ? "Företag kan hitta dig via dina attesterade beslut. Ett eget val — offentlig betyder inte automatiskt sökbar."
+                : "Kräver en offentlig profil. Välj Offentlig ovan för att kunna slås på."}
             </span>
           </span>
         </label>

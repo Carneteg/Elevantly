@@ -81,6 +81,12 @@ export default async function CompanyDetailPage({
         {company.summary && (
           <p className="mt-2 text-[var(--color-muted)]">{company.summary}</p>
         )}
+        <a
+          href="/recruiter/search"
+          className="mt-4 inline-block rounded-full bg-[var(--color-accent)] px-6 py-3 font-medium text-white"
+        >
+          Sök kandidater →
+        </a>
       </header>
 
       <section aria-labelledby="jobs-heading" className="mb-12">

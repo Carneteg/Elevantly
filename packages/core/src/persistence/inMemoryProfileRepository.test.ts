@@ -22,6 +22,7 @@ function profile(
     userId,
     decisions: actions.map(decision),
     visibility: "private",
+    discoverableByRecruiters: false,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -163,6 +164,65 @@ describe("InMemoryProfileRepository", () => {
 
       expect(await repo.findUserIdByVisibleHandle("con")).toBe("u-con");
       expect(await repo.findUserIdByVisibleHandle("pri")).toBeNull();
+    });
+  });
+
+  describe("listDiscoverableProfiles (rekryterarsök, opt-in)", () => {
+    it("listar bara offentliga profiler som valt att synas — med beslut", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("u-in", ["Ledde produkten"], {
+          visibility: "public",
+          handle: "opt-in",
+          displayName: "Anna",
+          headline: "Produktledare",
+          discoverableByRecruiters: true,
+        }),
+      );
+      // Offentlig men INTE opt-in → utesluts.
+      await repo.save(
+        profile("u-pub", ["A"], {
+          visibility: "public",
+          handle: "bara-publik",
+          discoverableByRecruiters: false,
+        }),
+      );
+      // Contacts/privat, även med opt-in-flaggan → utesluts (kräver offentlig).
+      await repo.save(
+        profile("u-con", ["B"], {
+          visibility: "contacts",
+          handle: "kontakt",
+          discoverableByRecruiters: true,
+        }),
+      );
+
+      const found = await repo.listDiscoverableProfiles();
+      expect(found.map((p) => p.handle)).toEqual(["opt-in"]);
+      expect(found[0]).toMatchObject({
+        userId: "u-in",
+        handle: "opt-in",
+        displayName: "Anna",
+        headline: "Produktledare",
+      });
+      expect(found[0]?.decisions.map((d) => d.action)).toEqual([
+        "Ledde produkten",
+      ]);
+    });
+
+    it("isolerar besluten från extern mutation", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("u-in", ["A"], {
+          visibility: "public",
+          handle: "opt-in",
+          discoverableByRecruiters: true,
+        }),
+      );
+      const found = await repo.listDiscoverableProfiles();
+      found[0]?.decisions.push(decision("smugglad"));
+
+      const fresh = await repo.listDiscoverableProfiles();
+      expect(fresh[0]?.decisions.map((d) => d.action)).toEqual(["A"]);
     });
   });
 });

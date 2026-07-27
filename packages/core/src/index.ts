@@ -198,6 +198,12 @@ export { InMemoryJobRepository } from "./jobs/inMemoryJobRepository";
 export { SupabaseJobRepository } from "./jobs/supabaseJobRepository";
 export { matchJobs } from "./jobs/matchJobs";
 export type { JobMatch, JobSkillEvidence } from "./jobs/matchJobs";
+export { searchCandidates } from "./jobs/searchCandidates";
+export type {
+  CandidateInput,
+  CandidateMatch,
+  CandidateSkillEvidence,
+} from "./jobs/searchCandidates";
 
 // Ansökningar: den grundade profilen som ansökan (utbytbart lager — in-memory + Supabase)
 export type {
