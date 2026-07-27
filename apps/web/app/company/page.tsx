@@ -47,9 +47,12 @@ export default async function CompanyPage() {
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className="text-lg font-semibold">{company.name}</h2>
-                  <span className="text-sm text-[var(--color-muted)]">
-                    Jobb kommer snart
-                  </span>
+                  <a
+                    href={`/company/${company.id}`}
+                    className="text-sm font-medium underline"
+                  >
+                    Hantera jobb →
+                  </a>
                 </div>
                 {company.summary && (
                   <p className="mt-1 text-sm text-[var(--color-muted)]">
