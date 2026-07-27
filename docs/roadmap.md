@@ -113,7 +113,20 @@ identitetshuvud med självvald inriktning (monospace, inga fåfänge-siffror) + 
 förtroendeindikator ("X av Y prestationer har kopplat utfall" via `outcomeCoverage`),
 och varje prestation bär en **bevisgrad** (`evidenceTier` → `EvidenceTag`). v1 märker
 allt som `○ självrapporterat` — ärligt, eftersom kontextlänkning/attestering ännu inte
-finns (§8.3/§11). Nästa skivor: desktop-3-kolumnsram, attesteringsflöde, rekryterarsök.
+finns (§8.3/§11).
+
+**Byggt (fas 7-2): attesteringsflödet (Del 3).** Ett självrapporterat beslut kan nu bli
+`● attesterat`: en accepterad **kontakt** intygar en specifik prestation med en kort
+**motivering** (inte ett klick), och profilägaren måste **godkänna** intyget innan det
+visas (samtycke, §9.3). Knappheten är designad — varje användare kan bara ha ett
+begränsat antal aktiva attesteringar (synlig budget), vilket gör intyget socialt "dyrt"
+och därmed trovärdigt (motmedicinen mot LinkedIns valutalösa endorsements). Attesteringen
+pekar på beslutet via `decisionIdentity` (systemets stabila innehållsnyckel — ingen
+migration av besluten). Nytt: `attestations`-tabell + RLS + security-definer-funktioner
+(migration 0017), core-modulen `attestation/`, `AttestButton` på `/u/[handle]` och en
+inkorg på `/profile`. Attesterarens namn visas bara om deras egen profil är offentlig —
+en privat identitet läcker aldrig, men motiveringen (substansen) visas alltid.
+Nästa skivor: desktop-3-kolumnsram, kontextförankring (`◐`), rekryterarsök.
 
 ### Del 1 — Desktop-ramen (skalet)
 Idag är UI:t låst i mobilkolumn. På desktop (≥1024px) går vi från en till **tre
