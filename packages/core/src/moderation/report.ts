@@ -8,7 +8,21 @@
 /** Vad en rapport gäller. */
 export type ReportSubjectType = "profile" | "post" | "message";
 
-/** En rapport: vem som flaggade vad, och varför. */
+/**
+ * Var en rapport står i granskningen. `open` = väntar på beslut (kön), `resolved`
+ * = åtgärdad, `dismissed` = avvisad (ingen åtgärd behövs). Ingen automatik avgör
+ * detta — en granskare sätter det (CLAUDE.md 11: förtroende är produkten).
+ */
+export type ReportStatus = "open" | "resolved" | "dismissed";
+
+const STATUSES: ReportStatus[] = ["open", "resolved", "dismissed"];
+
+/** Är värdet en giltig rapportstatus? */
+export function isReportStatus(value: string): value is ReportStatus {
+  return (STATUSES as string[]).includes(value);
+}
+
+/** En rapport: vem som flaggade vad, varför, och var den står i granskningen. */
 export interface Report {
   /** Stabilt id (sätts av lagret/databasen). */
   id: string;
@@ -22,6 +36,12 @@ export interface Report {
   reason: string;
   /** När rapporten skapades (ISO 8601). */
   createdAt: string;
+  /** Var rapporten står i granskningen. Ny rapport börjar som `open`. */
+  status: ReportStatus;
+  /** Granskaren som senast satte status (userId), eller `null` medan `open`. */
+  resolvedBy: string | null;
+  /** När status senast sattes bort från `open` (ISO 8601), eller `null`. */
+  resolvedAt: string | null;
 }
 
 /** Övre gräns på motiveringens längd — dataminimering. */

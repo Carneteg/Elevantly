@@ -79,10 +79,17 @@ till.
   `/messages` (samtal = kontakter), `/messages/[handle]` (live tråd via Supabase
   Realtime + kompositor), "Meddela" på kontakter. Strikt privat (§9).
 
-### 5. Möjligheter
+### 5. Möjligheter — 🔜 *pågår*
 **Användarfråga:** *"Vilka roller/samarbeten passar det jag faktiskt gjort?"*
-- Matcha profil mot roller/samarbeten — bygger på den grundade datan och
-  (senare) marknadsinsikter.
+- Byggt (v1): grundad **rollmatchning**. `matchRoles` matchar användarens beslut/
+  kompetenser mot rollarketyper — rent, deterministiskt och **förklarbart**
+  (CLAUDE.md 8.5): varje förslag visar exakt vilka kompetenser och beslut det
+  vilar på (8.3), och en roll föreslås aldrig utan spårbart stöd (11). Rollkällan
+  är utbytbar (`RoleCatalog`, 8.4): v1 är en kurerad katalog i repot
+  (`StaticRoleCatalog`), en extern taxonomi (ESCO/SSYK) kan ersätta den senare.
+  `/opportunities` (server-renderad, ger värde utan nätverk — 6.2) + nav.
+- Senare: rikare relevans (embeddings/RAG), samarbeten/möjligheter från nätverket,
+  och marknadsinsikter (lön/rolltrender) med spårbar källa per siffra.
 
 ### Tvärgående: trust & safety — 🔜 *pågår*
 Ett socialt lager kräver **moderering, rapportering och missbruksskydd** från
@@ -107,8 +114,14 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
   ingen kan ge sig själv admin via API:t). `ReportRepository.listForReview` +
   en server-skyddad `/admin`-sida (404 för icke-granskare) som visar flaggat
   innehåll nyast först. Ingen automatik — en signal för mänskligt beslut.
-- Nästa: åtgärder i granskningsvyn (markera hanterad/avvisad), och ett beslut om
-  huruvida blockeringar ska exponeras för granskare (idag privata by design).
+- Byggt (femte bricken): **åtgärder i granskningskön**. Migration `0011` ger
+  rapporter en `status` (`open`/`resolved`/`dismissed`) med spårning av vem/när
+  (`resolved_by`/`resolved_at`), och en RLS-policy så bara granskare kan UPPDATERA.
+  `ReportRepository.setStatus` + kön visar bara öppna. `/admin` fick knappar
+  "Markera hanterad"/"Avvisa" (via `/api/admin/reports`) — ett spårat mänskligt
+  beslut, ingen automatik.
+- Nästa: ett beslut om huruvida blockeringar ska exponeras för granskare (idag
+  privata by design), och eventuellt en historik-vy över åtgärdade rapporter.
 
 ### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
 **Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med

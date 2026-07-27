@@ -1,4 +1,4 @@
-import type { Report, ReportSubjectType } from "./report";
+import type { Report, ReportStatus, ReportSubjectType } from "./report";
 
 /**
  * Lagring av rapporter — samma abstraktionsmönster som övriga repositories
@@ -17,9 +17,22 @@ export interface ReportRepository {
   ): Promise<Report>;
 
   /**
-   * Granskningskön: rapporter nyast först, begränsat till `limit`. Endast för
-   * granskare — i Supabase-varianten gäller RLS så att bara en admin når något
-   * (via `is_admin()`); vanliga användare får en tom lista. Se `supabase/migrations/`.
+   * Granskningskön: ÖPPNA rapporter nyast först, begränsat till `limit`. Endast
+   * för granskare — i Supabase-varianten gäller RLS så att bara en admin når något
+   * (via `is_admin()`); vanliga användare får en tom lista. Åtgärdade/avvisade
+   * rapporter faller ur kön. Se `supabase/migrations/`.
    */
   listForReview(limit?: number): Promise<Report[]>;
+
+  /**
+   * Sätter en rapports status (granskarens beslut). `adminId` är granskaren som
+   * fattar beslutet; `now` tidsstämplar det. Att sätta något annat än `open`
+   * markerar rapporten som avförd ur kön. Endast granskare (RLS).
+   */
+  setStatus(
+    id: string,
+    status: ReportStatus,
+    adminId: string,
+    now: string,
+  ): Promise<void>;
 }
