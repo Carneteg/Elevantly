@@ -134,6 +134,14 @@ ESCO/SSYK), **jobbannons-entitet** (strukturerade krav + RLS), **`matchJob`/sök
 `/jobs` med förklarbara träffar) · 6b arbetsgivarkonton + annonsering · 6c
 ansökningar + granskning + samtycke · 6d full ESCO/SSYK-taxonomi (anti-djungel skarpt).
 
+- Byggt (fas 6a, första bricken): **kanonisk taxonomi + grundad jobbmatchning.**
+  `SkillTaxonomy` (interface, §8.4) + `StaticSkillTaxonomy` (kurerad seed med synonymer)
+  som viker in titelvarianter till ett begrepp — `canonicalizeTerm` återanvänder
+  `normalizeText`/`tokenize`. `Job`/`JobCatalog` + seedade annonser (krav i kanoniska
+  skill-id). `matchJobs` kanoniserar kandidatens kompetenser och matchar på begrepp
+  (inte nyckelord), förklarbart och grundat (§8.3/§8.5). `/jobs` visar träffar med
+  täckning + exakt bevisföring. Ingen ansökan/arbetsgivare än — kandidatvärde först.
+
 **Aldrig (jobb-specifikt):** inga uppblåsta titlar som söksignal, ingen betald
 synlighet före relevans (§8.5), ingen data säljs (§9), matchning måste gå att förklara.
 

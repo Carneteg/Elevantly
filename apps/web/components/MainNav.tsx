@@ -34,6 +34,7 @@ export function MainNav({
         { href: "/network", label: "Nätverk", icon: <NetworkIcon /> },
         { href: "/messages", label: "Meddelanden", icon: <MessageIcon /> },
         { href: "/opportunities", label: "Möjligheter", icon: <OpportunityIcon /> },
+        { href: "/jobs", label: "Jobb", icon: <JobIcon /> },
       ]
     : [{ href: "/", label: "Hem", icon: <HomeIcon /> }];
 
@@ -243,6 +244,16 @@ function OpportunityIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="9" />
       <path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8z" />
+    </svg>
+  );
+}
+
+function JobIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7" />
+      <path d="M3 12h18" />
     </svg>
   );
 }

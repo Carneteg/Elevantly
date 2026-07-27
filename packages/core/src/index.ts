@@ -141,3 +141,16 @@ export type { RoleCatalog } from "./opportunities/roleCatalog";
 export { StaticRoleCatalog, DEFAULT_ROLES } from "./opportunities/staticRoleCatalog";
 export { matchRoles } from "./opportunities/matchRoles";
 export type { RoleMatch, CapabilityEvidence } from "./opportunities/matchRoles";
+
+// Taxonomi: kanoniska kompetensbegrepp (anti-djungel — utbytbar källa, §8.4)
+export type { CanonicalSkill } from "./taxonomy/skill";
+export { canonicalizeTerm } from "./taxonomy/skill";
+export type { SkillTaxonomy } from "./taxonomy/skillTaxonomy";
+export { StaticSkillTaxonomy, DEFAULT_SKILLS } from "./taxonomy/staticSkillTaxonomy";
+
+// Jobb & rekrytering: strukturerade annonser + grundad, förklarbar matchning
+export type { Job } from "./jobs/job";
+export type { JobCatalog } from "./jobs/jobCatalog";
+export { StaticJobCatalog, DEFAULT_JOBS } from "./jobs/staticJobCatalog";
+export { matchJobs } from "./jobs/matchJobs";
+export type { JobMatch, JobSkillEvidence } from "./jobs/matchJobs";
