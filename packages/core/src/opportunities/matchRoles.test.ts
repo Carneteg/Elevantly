@@ -55,18 +55,17 @@ describe("matchRoles", () => {
 
     // Ingenjörsrollen saknar stöd → returneras inte (ingen påhittad riktning).
     expect(matches.map((m) => m.role.id)).toEqual(["product-lead"]);
-    const top = matches[0];
-    expect(top.matchedCount).toBe(3);
-    expect(top.totalCount).toBe(3);
+    expect(matches[0]?.matchedCount).toBe(3);
+    expect(matches[0]?.totalCount).toBe(3);
   });
 
   it("bevisrar varje match ner till en handling", () => {
     const decisions = [decision("Ritade om systemarkitektur", ["arkitektur"])];
-    const [match] = matchRoles(decisions, ROLES);
+    const match = matchRoles(decisions, ROLES)[0];
 
-    expect(match.role.id).toBe("engineer");
-    expect(match.evidence).toHaveLength(1);
-    expect(match.evidence[0]).toMatchObject({
+    expect(match?.role.id).toBe("engineer");
+    expect(match?.evidence).toHaveLength(1);
+    expect(match?.evidence[0]).toMatchObject({
       roleCapability: "arkitektur",
       userCapability: "arkitektur",
       fromActions: ["Ritade om systemarkitektur"],
@@ -83,7 +82,7 @@ describe("matchRoles", () => {
 
     const matches = matchRoles(decisions, ROLES);
     expect(matches.map((m) => m.role.id)).toEqual(["engineer", "product-lead"]);
-    expect(matches[0].score).toBeGreaterThan(matches[1].score);
+    expect(matches[0]?.score ?? 0).toBeGreaterThan(matches[1]?.score ?? 0);
   });
 
   it("ger tom lista utan beslut eller utan matchande kompetenser", () => {
