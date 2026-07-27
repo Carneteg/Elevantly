@@ -19,9 +19,10 @@ import { BlockButton } from "@/components/BlockButton";
  * Publik profilsida — /u/handle. Den delbara vyn av en persons grundade
  * identitet: namn, en kort headline och de beslut hen faktiskt beskrivit.
  *
- * Endast OFFENTLIGA profiler visas här (RLS + `loadPublicProfileByHandle`).
- * Privata, saknade eller ogiltiga handles ger 404 — ingen läcka om att en
- * profil finns men är privat. Ingen `userId` eller e-post exponeras någonsin:
+ * Visar en profil som betraktaren FÅR se (RLS + `loadVisibleProfileByHandle`):
+ * offentlig för alla, `contacts` för en accepterad kontakt, eller ens egen.
+ * Privata, dolda, saknade eller ogiltiga handles ger 404 — ingen läcka om att en
+ * profil finns men är dold. Ingen `userId` eller e-post exponeras någonsin:
  * vi läser `PublicProfile`, inte `StoredProfile` (CLAUDE.md 9).
  */
 export const runtime = "nodejs";
@@ -36,7 +37,8 @@ async function loadPublicProfile(
 
   const supabase = await createClient();
   const repository = new SupabaseProfileRepository(supabase);
-  return repository.loadPublicProfileByHandle(handleParam);
+  // RLS avgör: offentlig för alla, `contacts` för en accepterad kontakt, egen.
+  return repository.loadVisibleProfileByHandle(handleParam);
 }
 
 export async function generateMetadata({
@@ -80,7 +82,8 @@ async function loadViewerContext(handle: string): Promise<ViewerContext> {
     if (!user) return signedOut;
 
     const profiles = new SupabaseProfileRepository(supabase);
-    const ownerId = await profiles.findUserIdByPublicHandle(handle);
+    // Löser upp ägaren om betraktaren får se profilen (offentlig eller kontakt).
+    const ownerId = await profiles.findUserIdByVisibleHandle(handle);
     if (!ownerId) return signedOut;
     if (ownerId === user.id) return { connectState: "self", iBlocked: false };
 

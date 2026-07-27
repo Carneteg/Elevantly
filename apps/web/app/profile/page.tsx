@@ -43,8 +43,8 @@ export default async function ProfilePage() {
           Din delbara profil
         </h2>
         <p className="mb-4 text-sm text-[var(--color-muted)]">
-          Välj ett användarnamn och gör profilen offentlig när du vill dela den.
-          Den är privat tills du väljer annat.
+          Välj ett användarnamn och bestäm vem som ser profilen — bara du, dina
+          kontakter, eller alla med länken. Den är privat tills du väljer annat.
         </p>
         <ProfileEditor
           initialHandle={profile?.handle ?? ""}

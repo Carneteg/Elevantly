@@ -49,7 +49,12 @@ till.
   public-read), profil-editor och den publika profilsidan.
 - Substans över fåfänga: profilen visar bevisade beslut/utfall (bara poster med
   spårbar källa), aldrig e-post eller `userId`, inga tomma titlar.
-- Nästa steg här: `contacts`-synlighet (endast kontakter) när kontakter finns.
+- Byggt: **`contacts`-synlighet** (endast accepterade kontakter). Tre steg —
+  privat / kontakter / offentlig (CLAUDE.md 9.3). Migration `0012` (constraint +
+  RLS-policy där en accepterad kontakt får läsa en `contacts`-profil).
+  RLS-styrda läsvägar `loadVisibleProfileByHandle` / `findUserIdByVisibleHandle`
+  gör att `/u/handle` visar innehållet för kontakter och att rapportera/blockera
+  fungerar där. Offentlig upptäckt (nya kopplingar) förblir publik-bara.
 
 ### 2. Kontakter & relationer — 🔜 *pågår*
 **Användarfråga:** *"Kan jag bygga och nå mitt professionella nätverk?"*

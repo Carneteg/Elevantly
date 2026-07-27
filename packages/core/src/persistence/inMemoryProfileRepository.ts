@@ -57,11 +57,53 @@ export class InMemoryProfileRepository implements ProfileRepository {
     return null;
   }
 
+  /**
+   * OBS: in-memory-varianten kan inte känna till kontaktrelationer (den vet inget
+   * om kopplingar). Den approximerar därför "synlig" som "inte privat" — och
+   * upprätthåller INTE `contacts`-kontrollen. I drift är det row-level security i
+   * Supabase-varianten som avgör om en betraktare faktiskt är en kontakt.
+   */
+  async loadVisibleProfileByHandle(
+    handle: string,
+  ): Promise<PublicProfile | null> {
+    const wanted = normalizeHandle(handle);
+    for (const profile of this.store.values()) {
+      if (
+        profile.visibility !== "private" &&
+        profile.handle &&
+        normalizeHandle(profile.handle) === wanted
+      ) {
+        return {
+          handle: profile.handle,
+          displayName: profile.displayName ?? null,
+          headline: profile.headline ?? null,
+          decisions: structuredClone(profile.decisions),
+        };
+      }
+    }
+    return null;
+  }
+
   async findUserIdByPublicHandle(handle: string): Promise<string | null> {
     const wanted = normalizeHandle(handle);
     for (const profile of this.store.values()) {
       if (
         profile.visibility === "public" &&
+        profile.handle &&
+        normalizeHandle(profile.handle) === wanted
+      ) {
+        return profile.userId;
+      }
+    }
+    return null;
+  }
+
+  /** Se `loadVisibleProfileByHandle` — samma approximation (inte privat). */
+  async findUserIdByVisibleHandle(handle: string): Promise<string | null> {
+    const wanted = normalizeHandle(handle);
+    for (const profile of this.store.values()) {
+      if (
+        profile.visibility !== "private" &&
         profile.handle &&
         normalizeHandle(profile.handle) === wanted
       ) {
