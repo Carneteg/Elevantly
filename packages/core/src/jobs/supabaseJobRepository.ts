@@ -89,6 +89,17 @@ export class SupabaseJobRepository implements JobRepository {
     return (data ?? []).map(rowToJob);
   }
 
+  async load(id: string): Promise<Job | null> {
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(COLUMNS)
+      .eq("id", id)
+      .maybeSingle<JobRow>();
+
+    if (error) throw new Error(`Kunde inte läsa jobbet: ${error.message}`);
+    return data ? rowToJob(data) : null;
+  }
+
   async setStatus(id: string, companyId: string, status: JobStatus): Promise<void> {
     const { error } = await this.client
       .from(TABLE)

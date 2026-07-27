@@ -1,13 +1,23 @@
 import { notFound, redirect } from "next/navigation";
 import {
   StaticSkillTaxonomy,
+  SupabaseApplicationRepository,
   SupabaseCompanyRepository,
   SupabaseJobRepository,
 } from "@elevantly/core";
-import type { Job, JobStatus } from "@elevantly/core";
+import type { Application, ApplicationStatus, Job, JobStatus } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
+import { DecisionList } from "@/components/DecisionList";
 import { JobPostForm } from "@/components/JobPostForm";
 import { JobStatusActions } from "@/components/JobStatusActions";
+import { ApplicantActions } from "@/components/ApplicantActions";
+
+const APPLICATION_STATUS_LABEL: Record<ApplicationStatus, string> = {
+  submitted: "Inskickad",
+  reviewing: "Granskas",
+  accepted: "Antagen",
+  declined: "Avböjd",
+};
 
 /**
  * Företagsdetalj (arbetsgivarvy) — hantera företagets jobb och posta nya. Skyddad;
@@ -45,6 +55,17 @@ export default async function CompanyDetailPage({
   const skillOptions = skills.map((s) => ({ id: s.id, label: s.label }));
   const labelById = new Map(skills.map((s) => [s.id, s.label]));
 
+  // Ansökningar per jobb (RLS: medlemmar ser företagets ansökningar).
+  const applicationRepo = new SupabaseApplicationRepository(supabase);
+  const applicationsByJob = new Map<string, Application[]>(
+    await Promise.all(
+      jobs.map(
+        async (job) =>
+          [job.id, await applicationRepo.listForJob(job.id)] as const,
+      ),
+    ),
+  );
+
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-16">
       <header className="mb-10">
@@ -74,7 +95,12 @@ export default async function CompanyDetailPage({
         ) : (
           <ul className="flex flex-col gap-3">
             {jobs.map((job) => (
-              <JobRow key={job.id} job={job} labelById={labelById} />
+              <JobRow
+                key={job.id}
+                job={job}
+                labelById={labelById}
+                applications={applicationsByJob.get(job.id) ?? []}
+              />
             ))}
           </ul>
         )}
@@ -93,9 +119,11 @@ export default async function CompanyDetailPage({
 function JobRow({
   job,
   labelById,
+  applications,
 }: {
   job: Job;
   labelById: Map<string, string>;
+  applications: Application[];
 }) {
   const status = job.status ?? "published";
   const required = job.requiredSkillIds
@@ -114,6 +142,52 @@ function JobRow({
       )}
       <div className="mt-3">
         <JobStatusActions jobId={job.id} companyId={job.companyId ?? ""} status={status} />
+      </div>
+
+      <div className="mt-4 border-t border-[var(--color-line)] pt-4">
+        <p className="text-sm font-medium">
+          {applications.length === 0
+            ? "Inga ansökningar än."
+            : `${applications.length} ${applications.length === 1 ? "ansökan" : "ansökningar"}`}
+        </p>
+        {applications.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-4">
+            {applications.map((app) => (
+              <li
+                key={app.id}
+                className="rounded-xl border border-[var(--color-line)] bg-white p-4"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-medium">
+                    {app.candidateName ?? "Kandidat"}
+                  </span>
+                  <span className="text-xs text-[var(--color-muted)]">
+                    {APPLICATION_STATUS_LABEL[app.status]}
+                  </span>
+                </div>
+                {app.candidateHeadline && (
+                  <p className="text-sm text-[var(--color-muted)]">
+                    {app.candidateHeadline}
+                  </p>
+                )}
+                {app.message && (
+                  <p className="mt-2 text-sm">{app.message}</p>
+                )}
+                {app.decisions.length > 0 && (
+                  <div className="mt-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">
+                      Grundad profil (ögonblicksbild)
+                    </p>
+                    <DecisionList decisions={app.decisions} />
+                  </div>
+                )}
+                <div className="mt-3">
+                  <ApplicantActions applicationId={app.id} status={app.status} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </li>
   );
