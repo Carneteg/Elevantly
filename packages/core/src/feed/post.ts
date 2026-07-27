@@ -9,6 +9,20 @@
  * mönster (CLAUDE.md 11).
  */
 
+/**
+ * En ögonblicksbild av ett av författarens egna bevisade beslut, som ett inlägg
+ * kan grundas i. Substans på den sociala ytan (CLAUDE.md 6.5/11): ett grundat
+ * inlägg är spårbart till en verklig handling, precis som profilen. Det är en
+ * KOPIA (tas vid publicering) — servern validerar att beslutet faktiskt tillhör
+ * författaren innan den sätts (CLAUDE.md 8.3: aldrig påhittad grund).
+ */
+export interface PostGrounding {
+  /** Vad författaren gjorde (från beslutet). */
+  action: string;
+  /** Mätbart utfall om beslutet hade ett. */
+  outcome?: string;
+}
+
 /** Ett inlägg i flödet. `body` är fritext (markerad som fritext, inte struktur). */
 export interface Post {
   /** Stabilt id (sätts av lagret/databasen). */
@@ -19,6 +33,25 @@ export interface Post {
   body: string;
   /** När inlägget skapades (ISO 8601). */
   createdAt: string;
+  /**
+   * Valfri grund: ett av författarens egna beslut som inlägget vilar på. Sätts bara
+   * när författaren väljer det, och alltid som en server-validerad ögonblicksbild.
+   */
+  groundedIn?: PostGrounding;
+}
+
+/**
+ * Normaliserar en grund: trimmar text och utelämnar ett tomt `outcome`. Returnerar
+ * `undefined` om det inte finns någon meningsfull `action` att grunda i.
+ */
+export function normalizeGrounding(
+  grounding: PostGrounding | undefined,
+): PostGrounding | undefined {
+  if (!grounding) return undefined;
+  const action = grounding.action.trim();
+  if (!action) return undefined;
+  const outcome = grounding.outcome?.trim();
+  return outcome ? { action, outcome } : { action };
 }
 
 /** Övre gräns på ett inläggs längd — dataminimering och skydd mot missbruk. */

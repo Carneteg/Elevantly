@@ -65,4 +65,38 @@ describe("InMemoryPostRepository", () => {
     const [fresh] = await repo.listByAuthors(["a"]);
     expect(fresh?.body).toBe("text");
   });
+
+  it("grundar ett inlägg i ett beslut och bevarar grunden i flödet", async () => {
+    const repo = new InMemoryPostRepository();
+    await repo.create("a", "Delade en insikt", T1, {
+      action: "Ledde en omställning",
+      outcome: "minskade churn 12%",
+    });
+
+    const [post] = await repo.listByAuthors(["a"]);
+    expect(post?.groundedIn).toEqual({
+      action: "Ledde en omställning",
+      outcome: "minskade churn 12%",
+    });
+  });
+
+  it("normaliserar grunden (trim, utelämnar tomt outcome) och isolerar den", async () => {
+    const repo = new InMemoryPostRepository();
+    const created = await repo.create("a", "text", T1, {
+      action: "  Byggde X  ",
+      outcome: "   ",
+    });
+    expect(created.groundedIn).toEqual({ action: "Byggde X" });
+
+    // Mutation av returvärdet påverkar inte lagringen.
+    if (created.groundedIn) created.groundedIn.action = "manipulerad";
+    const [fresh] = await repo.listByAuthors(["a"]);
+    expect(fresh?.groundedIn?.action).toBe("Byggde X");
+  });
+
+  it("lämnar groundedIn odefinierad för ett ogrundat inlägg", async () => {
+    const repo = new InMemoryPostRepository();
+    const post = await repo.create("a", "text", T1);
+    expect(post.groundedIn).toBeUndefined();
+  });
 });

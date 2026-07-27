@@ -1,5 +1,10 @@
-import type { Post } from "./post";
-import { isValidPostBody, normalizePostBody, orderFeed } from "./post";
+import type { Post, PostGrounding } from "./post";
+import {
+  isValidPostBody,
+  normalizeGrounding,
+  normalizePostBody,
+  orderFeed,
+} from "./post";
 import type { PostRepository } from "./postRepository";
 
 /**
@@ -12,26 +17,33 @@ export class InMemoryPostRepository implements PostRepository {
   private readonly posts: Post[] = [];
   private seq = 0;
 
-  async create(authorId: string, body: string, now: string): Promise<Post> {
+  async create(
+    authorId: string,
+    body: string,
+    now: string,
+    groundedIn?: PostGrounding,
+  ): Promise<Post> {
     if (!authorId) throw new Error("authorId krävs för att skapa ett inlägg.");
     if (!isValidPostBody(body)) {
       throw new Error("Ogiltig inläggstext (tom eller för lång).");
     }
+    const grounding = normalizeGrounding(groundedIn);
     const post: Post = {
       id: `post-${++this.seq}`,
       authorId,
       body: normalizePostBody(body),
       createdAt: now,
+      ...(grounding ? { groundedIn: grounding } : {}),
     };
-    this.posts.push({ ...post });
-    return { ...post };
+    this.posts.push(structuredClone(post));
+    return structuredClone(post);
   }
 
   async listByAuthors(authorIds: string[], limit = 100): Promise<Post[]> {
     const wanted = new Set(authorIds);
     return orderFeed(this.posts.filter((p) => wanted.has(p.authorId)))
       .slice(0, limit)
-      .map((p) => ({ ...p }));
+      .map((p) => structuredClone(p));
   }
 
   async delete(id: string, authorId: string): Promise<void> {

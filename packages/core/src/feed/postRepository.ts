@@ -1,4 +1,4 @@
-import type { Post } from "./post";
+import type { Post, PostGrounding } from "./post";
 
 /**
  * Lagring av flödesinlägg — samma abstraktionsmönster som övriga repositories
@@ -12,8 +12,17 @@ import type { Post } from "./post";
  * `authorIds`. Det håller flödeslagret frikopplat från relationslagret.
  */
 export interface PostRepository {
-  /** Skapar ett inlägg av `authorId`. Returnerar det skapade inlägget (med id). */
-  create(authorId: string, body: string, now: string): Promise<Post>;
+  /**
+   * Skapar ett inlägg av `authorId`. Returnerar det skapade inlägget (med id).
+   * `groundedIn` (valfritt) knyter inlägget till ett av författarens egna beslut —
+   * anroparen ansvarar för att grunden är validerad (server-sidan).
+   */
+  create(
+    authorId: string,
+    body: string,
+    now: string,
+    groundedIn?: PostGrounding,
+  ): Promise<Post>;
 
   /**
    * Inlägg från en uppsättning författare, nyast först, begränsat till `limit`.

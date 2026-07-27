@@ -73,7 +73,13 @@ till.
   nyast först — CLAUDE.md 8.5), `PostRepository` (in-memory + Supabase), migration
   `0004` (RLS: syns för författaren + accepterade kontakter), `/feed` med
   lågfriktions-kompositor. Inga mörka mönster, ingen doomscroll-optimering (§11).
-- Senare: koppla inlägg till en `Decision` för grundade inlägg; rikare relevans.
+- Byggt: **grundade inlägg**. Ett inlägg kan valfritt knytas till ett av
+  författarens egna bevisade beslut — samma spårbarhet som profilen, nu på den
+  sociala ytan (§6.5/§11). `Post.groundedIn` (ögonblicksbild), migration `0013`
+  (`grounded_in jsonb`), en besluts-väljare i kompositorn och en "◆ Grundat i ett
+  beslut"-chip i flödet. Grunden är **server-validerad**: bara ett beslut
+  författaren faktiskt äger kan sättas, aldrig påhittad text (§8.3).
+- Senare: rikare relevans.
 
 ### 4. Meddelanden — 🔜 *pågår*
 **Användarfråga:** *"Kan jag ta ett samtal med rätt person?"*
@@ -95,6 +101,41 @@ till.
   `/opportunities` (server-renderad, ger värde utan nätverk — 6.2) + nav.
 - Senare: rikare relevans (embeddings/RAG), samarbeten/möjligheter från nätverket,
   och marknadsinsikter (lön/rolltrender) med spårbar källa per siffra.
+
+### 6. Jobb & rekrytering — 🗺️ *planerad (nästa pelare)*
+**Användarfråga (kandidat):** *"Vilka jobb passar det jag faktiskt gjort — utan
+att jag ska behöva gissa rätt sökord?"*
+**Användarfråga (arbetsgivare):** *"Hur når jag rätt kandidater utifrån bevisad
+substans, inte uppblåsta CV:n?"*
+
+**Smartare än LinkedIns sökdjungel.** LinkedIn är en djungel för att roller och
+kompetenser är fritext — samma jobb har många titlar, varje kompetens många
+synonymer, och sök blir nyckelordsmatchning över inkonsekvent text. Elevantly
+vänder på det:
+- **Ett kanoniskt begrepp per kompetens/roll.** Jobb OCH kandidater beskrivs i EN
+  kanonisk skill-/rolltaxonomi (ESCO/SSYK). Synonymer och titelvarianter
+  ("frontendutvecklare" / "webbutvecklare" / "UI-ingenjör") vikts in till samma
+  begrepp — man söker begreppet, inte orden.
+- **Jobb är strukturerade krav, inte prosa** — kanoniska kärnkompetenser
+  (obligatoriska/önskade) + ansvarsnivå (`ResponsibilityLevel`), inte en fritextklump.
+- **Matchning på struktur, förklarbart.** Kandidat↔jobb återanvänder
+  `matchRoles`-filosofin (fas 5): en transparent poäng grundad i bevisade beslut
+  (§8.3) — "du matchar för att dina beslut visar X". Aldrig en svart låda (§8.5).
+- **Den grundade profilen ÄR ansökan** — ingen separat CV, ingen nyckelordsstoppning.
+- **Sök på avsikt, inte nyckelord** — fritext normaliseras till kanoniska begrepp.
+
+Bygger på: `Role`/`RoleCatalog`/`matchRoles`, `CapabilityClaim`/`Decision`, planerad
+ESCO/SSYK. Nya delar: **arbetsgivarkonton** (ny aktör), **kanonisk taxonomi-tjänst**
+(`SkillTaxonomy` bakom interface, §8.4 — v1 kurerad katalog + synonymlager, byts mot
+ESCO/SSYK), **jobbannons-entitet** (strukturerade krav + RLS), **`matchJob`/sök**,
+**ansökningsflöde** (kandidaten styr vad som delas, §9.3), **moderering** (återanvänder rapporter).
+
+**Faser:** 6a kandidatmatchning först (värde utan arbetsgivare, §6.2 — seedade jobb,
+`/jobs` med förklarbara träffar) · 6b arbetsgivarkonton + annonsering · 6c
+ansökningar + granskning + samtycke · 6d full ESCO/SSYK-taxonomi (anti-djungel skarpt).
+
+**Aldrig (jobb-specifikt):** inga uppblåsta titlar som söksignal, ingen betald
+synlighet före relevans (§8.5), ingen data säljs (§9), matchning måste gå att förklara.
 
 ### Tvärgående: trust & safety — 🔜 *pågår*
 Ett socialt lager kräver **moderering, rapportering och missbruksskydd** från
@@ -146,6 +187,9 @@ persondata i flera lager (profil, kopplingar, flöde, meddelanden, blockeringar)
 
 ## 🌅 Längre fram
 
+- **Kanonisk skill-/rolltaxonomi (ESCO/SSYK)** — anti-djungel-motorn som driver
+  pelare 6 (Jobb & rekrytering): ett begrepp per kompetens/roll, synonymer invikta.
+  Bakom `SkillTaxonomy`-interfacet (§8.4) så v1 kan starta kurerat och bytas.
 - **Marknadsinsikter** (lön/rolltrender) från öppna källor med spårbar källa per
   siffra (SCB, JobTech, ESCO/SSYK) — se `docs/data-sources.md`.
 - **Kompetens-/karriärgraf** (ESCO/SSYK), senare berikad med faktiska rörelser
