@@ -95,9 +95,14 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
   (in-memory + Supabase), migration `0007` (RLS: se bara egna blockeringar +
   `security definer`-funktionen `is_blocked_with` som svarar ömsesidigt utan att
   avslöja att man blockerats). Blockering bryter befintlig koppling och nekar nya
-  meddelanden/förfrågningar (upprätthålls i rutterna). `BlockButton` på `/u/handle`.
-- Nästa: en **granskningsvy** för rapporter/blockeringar (admin), och att lyfta
-  blockering till DB-nivå (RLS på inlägg/meddelanden) som djupare försvar.
+  meddelanden/förfrågningar. `BlockButton` på `/u/handle`.
+- Byggt (tredje bricken): **blockering i datalagret (defense in depth)**. Migration
+  `0009` lyfter blockeringskontrollen från route-koden ner i RLS: `is_blocked_with`
+  vävs in i policyerna för att skicka meddelande, skapa/acceptera kontakt och se
+  flödesinlägg. Route-koden behåller sina kontroller för vänliga felmeddelanden —
+  två lås, inte ett. Nu kan ingen app-väg glömma spärren.
+- Nästa: en **granskningsvy** för rapporter/blockeringar (admin) — kräver ett
+  admin-/rollbeslut (vem granskar, och hur avgränsas åtkomsten).
 
 ### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
 **Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med
