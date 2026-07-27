@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isReportStatus,
   isReportSubjectType,
   isValidReport,
   MAX_REPORT_REASON,
@@ -27,6 +28,13 @@ describe("report validering", () => {
       MAX_REPORT_REASON,
     );
   });
+
+  it("känner igen giltiga statusvärden", () => {
+    expect(isReportStatus("open")).toBe(true);
+    expect(isReportStatus("resolved")).toBe(true);
+    expect(isReportStatus("dismissed")).toBe(true);
+    expect(isReportStatus("klar")).toBe(false);
+  });
 });
 
 describe("InMemoryReportRepository", () => {
@@ -44,6 +52,9 @@ describe("InMemoryReportRepository", () => {
     expect(report.subjectType).toBe("post");
     expect(report.subjectId).toBe("post-42");
     expect(report.reason).toBe("olämpligt");
+    expect(report.status).toBe("open");
+    expect(report.resolvedBy).toBeNull();
+    expect(report.resolvedAt).toBeNull();
     expect(repo.all()).toHaveLength(1);
   });
 
@@ -68,5 +79,35 @@ describe("InMemoryReportRepository", () => {
 
     const limited = await repo.listForReview(2);
     expect(limited.map((r) => r.subjectId)).toEqual(["tobias", "m9"]);
+  });
+
+  it("setStatus avför en rapport ur kön och spårar granskare + tid", async () => {
+    const repo = new InMemoryReportRepository();
+    const open = await repo.create("u1", "post", "p1", "", "2026-01-01T00:00:00.000Z");
+    await repo.create("u2", "profile", "tobias", "", "2026-02-02T00:00:00.000Z");
+
+    await repo.setStatus(open.id, "resolved", "admin-1", "2026-04-04T00:00:00.000Z");
+
+    // Kön visar bara öppna kvar.
+    const queue = await repo.listForReview();
+    expect(queue.map((r) => r.subjectId)).toEqual(["tobias"]);
+
+    // Den åtgärdade bär granskare + tidsstämpel.
+    const resolved = repo.all().find((r) => r.id === open.id);
+    expect(resolved?.status).toBe("resolved");
+    expect(resolved?.resolvedBy).toBe("admin-1");
+    expect(resolved?.resolvedAt).toBe("2026-04-04T00:00:00.000Z");
+  });
+
+  it("setStatus tillbaka till open nollställer granskare + tid", async () => {
+    const repo = new InMemoryReportRepository();
+    const r = await repo.create("u1", "post", "p1", "", "2026-01-01T00:00:00.000Z");
+    await repo.setStatus(r.id, "dismissed", "admin-1", "2026-04-04T00:00:00.000Z");
+    await repo.setStatus(r.id, "open", "admin-1", "2026-05-05T00:00:00.000Z");
+
+    const back = repo.all().find((x) => x.id === r.id);
+    expect(back?.status).toBe("open");
+    expect(back?.resolvedBy).toBeNull();
+    expect(back?.resolvedAt).toBeNull();
   });
 });

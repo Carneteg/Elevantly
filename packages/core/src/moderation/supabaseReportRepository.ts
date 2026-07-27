@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Report, ReportSubjectType } from "./report";
+import type { Report, ReportStatus, ReportSubjectType } from "./report";
 import { isValidReport, normalizeReason } from "./report";
 import type { ReportRepository } from "./reportRepository";
 
@@ -11,7 +11,8 @@ import type { ReportRepository } from "./reportRepository";
  */
 
 const TABLE = "reports";
-const COLUMNS = "id, reporter_id, subject_type, subject_id, reason, created_at";
+const COLUMNS =
+  "id, reporter_id, subject_type, subject_id, reason, created_at, status, resolved_by, resolved_at";
 
 interface ReportRow {
   id: string;
@@ -20,6 +21,9 @@ interface ReportRow {
   subject_id: string;
   reason: string;
   created_at: string;
+  status: ReportStatus;
+  resolved_by: string | null;
+  resolved_at: string | null;
 }
 
 export class SupabaseReportRepository implements ReportRepository {
@@ -56,12 +60,32 @@ export class SupabaseReportRepository implements ReportRepository {
     const { data, error } = await this.client
       .from(TABLE)
       .select(COLUMNS)
+      .eq("status", "open")
       .order("created_at", { ascending: false })
       .limit(limit)
       .returns<ReportRow[]>();
 
     if (error) throw new Error(`Kunde inte läsa rapporter: ${error.message}`);
     return (data ?? []).map(rowToReport);
+  }
+
+  async setStatus(
+    id: string,
+    status: ReportStatus,
+    adminId: string,
+    now: string,
+  ): Promise<void> {
+    const resolving = status !== "open";
+    const { error } = await this.client
+      .from(TABLE)
+      .update({
+        status,
+        resolved_by: resolving ? adminId : null,
+        resolved_at: resolving ? now : null,
+      })
+      .eq("id", id);
+
+    if (error) throw new Error(`Kunde inte uppdatera rapport: ${error.message}`);
   }
 }
 
@@ -73,5 +97,8 @@ function rowToReport(row: ReportRow): Report {
     subjectId: row.subject_id,
     reason: row.reason,
     createdAt: row.created_at,
+    status: row.status,
+    resolvedBy: row.resolved_by,
+    resolvedAt: row.resolved_at,
   };
 }

@@ -107,8 +107,14 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
   ingen kan ge sig själv admin via API:t). `ReportRepository.listForReview` +
   en server-skyddad `/admin`-sida (404 för icke-granskare) som visar flaggat
   innehåll nyast först. Ingen automatik — en signal för mänskligt beslut.
-- Nästa: åtgärder i granskningsvyn (markera hanterad/avvisad), och ett beslut om
-  huruvida blockeringar ska exponeras för granskare (idag privata by design).
+- Byggt (femte bricken): **åtgärder i granskningskön**. Migration `0011` ger
+  rapporter en `status` (`open`/`resolved`/`dismissed`) med spårning av vem/när
+  (`resolved_by`/`resolved_at`), och en RLS-policy så bara granskare kan UPPDATERA.
+  `ReportRepository.setStatus` + kön visar bara öppna. `/admin` fick knappar
+  "Markera hanterad"/"Avvisa" (via `/api/admin/reports`) — ett spårat mänskligt
+  beslut, ingen automatik.
+- Nästa: ett beslut om huruvida blockeringar ska exponeras för granskare (idag
+  privata by design), och eventuellt en historik-vy över åtgärdade rapporter.
 
 ### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
 **Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med

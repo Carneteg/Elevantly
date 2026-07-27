@@ -1,4 +1,4 @@
-import type { Report, ReportSubjectType } from "./report";
+import type { Report, ReportStatus, ReportSubjectType } from "./report";
 import { isValidReport, normalizeReason } from "./report";
 import type { ReportRepository } from "./reportRepository";
 
@@ -28,6 +28,9 @@ export class InMemoryReportRepository implements ReportRepository {
       subjectId: subjectId.trim(),
       reason: normalizeReason(reason),
       createdAt: now,
+      status: "open",
+      resolvedBy: null,
+      resolvedAt: null,
     };
     this.reports.push({ ...report });
     return { ...report };
@@ -35,9 +38,28 @@ export class InMemoryReportRepository implements ReportRepository {
 
   async listForReview(limit = 200): Promise<Report[]> {
     return [...this.reports]
+      .filter((r) => r.status === "open")
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, limit)
       .map((r) => ({ ...r }));
+  }
+
+  async setStatus(
+    id: string,
+    status: ReportStatus,
+    adminId: string,
+    now: string,
+  ): Promise<void> {
+    const report = this.reports.find((r) => r.id === id);
+    if (!report) return;
+    report.status = status;
+    if (status === "open") {
+      report.resolvedBy = null;
+      report.resolvedAt = null;
+    } else {
+      report.resolvedBy = adminId;
+      report.resolvedAt = now;
+    }
   }
 
   /** Endast för test/granskning: alla lagrade rapporter. */

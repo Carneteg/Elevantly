@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { SupabaseReportRepository } from "@elevantly/core";
 import type { Report } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
+import { ReportActions } from "@/components/ReportActions";
 
 /**
  * Granskningskö (admin). Rapporter är en envägssignal in till mänsklig
@@ -40,8 +41,9 @@ export default async function AdminPage() {
           Rapporter
         </h1>
         <p className="mt-2 text-sm text-[var(--color-muted)]">
-          Flaggat innehåll att granska, nyast först. Ingen åtgärd sker
-          automatiskt — det här är en signal för ett mänskligt beslut.
+          Öppna rapporter att granska, nyast först. Ingen åtgärd sker
+          automatiskt — det här är en signal för ett mänskligt beslut. Hanterade
+          och avvisade rapporter faller ur kön.
         </p>
       </header>
 
@@ -99,6 +101,8 @@ export default async function AdminPage() {
               <p className="mt-2 text-xs text-[var(--color-muted)]">
                 Rapporterad av {report.reporterId}
               </p>
+
+              <ReportActions reportId={report.id} />
             </li>
           ))}
         </ul>

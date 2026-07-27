@@ -114,8 +114,13 @@ export {
 export { InMemoryReportRepository } from "./moderation/inMemoryReportRepository";
 export { SupabaseReportRepository } from "./moderation/supabaseReportRepository";
 export type { ReportRepository } from "./moderation/reportRepository";
-export type { Report, ReportSubjectType } from "./moderation/report";
+export type {
+  Report,
+  ReportStatus,
+  ReportSubjectType,
+} from "./moderation/report";
 export {
+  isReportStatus,
   isReportSubjectType,
   isValidReport,
   normalizeReason,
