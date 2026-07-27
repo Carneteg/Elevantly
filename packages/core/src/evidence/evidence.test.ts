@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Decision } from "../decision";
+import { decisionIdentity } from "../decisionIdentity";
 import { evidenceTier, outcomeCoverage } from "./evidence";
 
 function decision(overrides: Partial<Decision> = {}): Decision {
@@ -14,9 +15,19 @@ function decision(overrides: Partial<Decision> = {}): Decision {
 }
 
 describe("evidenceTier", () => {
-  it("märker allt som självrapporterat i v1 (ingen påhittad verifiering)", () => {
+  it("märker allt som självrapporterat utan attesteringar", () => {
     expect(evidenceTier(decision())).toBe("self_reported");
     expect(evidenceTier(decision({ outcome: "minskade churn 12%" }))).toBe(
+      "self_reported",
+    );
+  });
+
+  it("blir attesterat när beslutets identitet finns bland godkända nycklar", () => {
+    const d = decision();
+    const attested = new Set([decisionIdentity(d)]);
+    expect(evidenceTier(d, attested)).toBe("attested");
+    // Ett annat beslut med annan identitet påverkas inte.
+    expect(evidenceTier(decision({ action: "Något annat" }), attested)).toBe(
       "self_reported",
     );
   });

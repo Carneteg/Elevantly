@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Decision } from "../decision";
 import type {
+  DiscoverableProfile,
   ProfileRepository,
   ProfileVisibility,
   PublicProfile,
@@ -21,15 +22,17 @@ import { normalizeHandle } from "./handle";
 
 const TABLE = "profiles";
 const COLUMNS =
-  "user_id, decisions, visibility, handle, display_name, headline, created_at, updated_at";
+  "user_id, decisions, visibility, discoverable_by_recruiters, handle, display_name, headline, created_at, updated_at";
 const PUBLIC_COLUMNS = "handle, display_name, headline, decisions";
 const SUMMARY_COLUMNS = "user_id, handle, display_name, headline";
+const DISCOVERABLE_COLUMNS = "user_id, handle, display_name, headline, decisions";
 
 /** Radformen i databasen (snake_case, decisions som jsonb). */
 interface ProfileRow {
   user_id: string;
   decisions: Decision[];
   visibility: ProfileVisibility;
+  discoverable_by_recruiters: boolean;
   handle: string | null;
   display_name: string | null;
   headline: string | null;
@@ -49,6 +52,14 @@ interface SummaryRow {
   handle: string;
   display_name: string | null;
   headline: string | null;
+}
+
+interface DiscoverableRow {
+  user_id: string;
+  handle: string;
+  display_name: string | null;
+  headline: string | null;
+  decisions: Decision[];
 }
 
 export class SupabaseProfileRepository implements ProfileRepository {
@@ -164,6 +175,25 @@ export class SupabaseProfileRepository implements ProfileRepository {
     }
     return (data ?? []).map(summaryRowToProfile);
   }
+
+  async listDiscoverableProfiles(): Promise<DiscoverableProfile[]> {
+    // Tillåts av policyn "Läs offentlig profil" (0002) — ingen SECURITY DEFINER.
+    // Opt-in (`discoverable_by_recruiters`) är ett app-lager-filter ovanpå den
+    // offentliga läsbarheten: en offentlig profil är redan världsläsbar; flaggan
+    // styr LISTNING i verktyget, inte läsåtkomst (se migration 0018).
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(DISCOVERABLE_COLUMNS)
+      .eq("visibility", "public")
+      .eq("discoverable_by_recruiters", true)
+      .not("handle", "is", null)
+      .returns<DiscoverableRow[]>();
+
+    if (error) {
+      throw new Error(`Kunde inte läsa rekryteringsprofiler: ${error.message}`);
+    }
+    return (data ?? []).map(discoverableRowToProfile);
+  }
 }
 
 function rowToProfile(row: ProfileRow): StoredProfile {
@@ -171,6 +201,7 @@ function rowToProfile(row: ProfileRow): StoredProfile {
     userId: row.user_id,
     decisions: row.decisions,
     visibility: row.visibility,
+    discoverableByRecruiters: row.discoverable_by_recruiters ?? false,
     ...(row.handle ? { handle: row.handle } : {}),
     ...(row.display_name ? { displayName: row.display_name } : {}),
     ...(row.headline ? { headline: row.headline } : {}),
@@ -184,6 +215,7 @@ function profileToRow(profile: StoredProfile): ProfileRow {
     user_id: profile.userId,
     decisions: profile.decisions,
     visibility: profile.visibility,
+    discoverable_by_recruiters: profile.discoverableByRecruiters ?? false,
     handle: profile.handle ?? null,
     display_name: profile.displayName ?? null,
     headline: profile.headline ?? null,
@@ -207,5 +239,15 @@ function summaryRowToProfile(row: SummaryRow): PublicProfileSummary {
     handle: row.handle,
     displayName: row.display_name,
     headline: row.headline,
+  };
+}
+
+function discoverableRowToProfile(row: DiscoverableRow): DiscoverableProfile {
+  return {
+    userId: row.user_id,
+    handle: row.handle,
+    displayName: row.display_name,
+    headline: row.headline,
+    decisions: row.decisions,
   };
 }

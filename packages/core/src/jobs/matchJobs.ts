@@ -1,6 +1,6 @@
 import type { Confidence, Decision } from "../decision";
 import type { CanonicalSkill } from "../taxonomy/skill";
-import { canonicalizeTerm } from "../taxonomy/skill";
+import { CONFIDENCE_WEIGHT, aggregateCandidateSkills } from "../taxonomy/aggregateCandidateSkills";
 import type { Job } from "./job";
 
 /**
@@ -37,20 +37,8 @@ export interface JobMatch {
   evidence: JobSkillEvidence[];
 }
 
-const CONFIDENCE_WEIGHT: Record<Confidence, number> = {
-  low: 1,
-  medium: 2,
-  high: 3,
-};
-
 /** Obligatoriska krav väger tyngre än meriterande. */
 const REQUIRED_MULTIPLIER = 2;
-
-interface CandidateSkill {
-  userCapability: string;
-  confidence: Confidence;
-  actions: Set<string>;
-}
 
 /**
  * Matchar kandidatens beslut mot jobbannonser — rent, deterministiskt och
@@ -69,30 +57,7 @@ export function matchJobs(
   skills: CanonicalSkill[],
 ): JobMatch[] {
   // Kandidatens kanoniska kompetenser: skill-id → bästa stödjande tolkning.
-  const byId = new Map<string, CandidateSkill>();
-  for (const decision of decisions) {
-    for (const capability of decision.capabilities) {
-      const skill = canonicalizeTerm(capability.name, skills);
-      if (!skill) continue;
-      const existing = byId.get(skill.id);
-      if (!existing) {
-        byId.set(skill.id, {
-          userCapability: capability.name,
-          confidence: capability.confidence,
-          actions: new Set([decision.action]),
-        });
-      } else {
-        existing.actions.add(decision.action);
-        if (
-          CONFIDENCE_WEIGHT[capability.confidence] >
-          CONFIDENCE_WEIGHT[existing.confidence]
-        ) {
-          existing.confidence = capability.confidence;
-          existing.userCapability = capability.name;
-        }
-      }
-    }
-  }
+  const byId = aggregateCandidateSkills(decisions, skills);
 
   const labelById = new Map(skills.map((skill) => [skill.id, skill.label]));
 

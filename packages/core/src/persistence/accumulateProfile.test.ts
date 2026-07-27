@@ -66,6 +66,7 @@ describe("upsertProfile", () => {
       userId: "user-1",
       decisions: [decision("A")],
       visibility: "private",
+      discoverableByRecruiters: false,
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     });
@@ -76,6 +77,7 @@ describe("upsertProfile", () => {
       userId: "user-1",
       decisions: [decision("A")],
       visibility: "private",
+      discoverableByRecruiters: false,
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };
@@ -90,6 +92,7 @@ describe("upsertProfile", () => {
       userId: "user-1",
       decisions: [decision("A")],
       visibility: "private",
+      discoverableByRecruiters: false,
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
     };

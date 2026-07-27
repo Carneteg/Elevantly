@@ -1,9 +1,15 @@
 import { redirect } from "next/navigation";
-import { SupabaseProfileRepository } from "@elevantly/core";
+import {
+  decisionIdentity,
+  SupabaseAttestationRepository,
+  SupabaseProfileRepository,
+} from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { DecisionList } from "@/components/DecisionList";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { AccountData } from "@/components/AccountData";
+import { AttestationInbox } from "@/components/AttestationInbox";
+import type { InboxItem } from "@/components/AttestationInbox";
 
 /**
  * Din profil — den grundade, strukturerade kärnan som ackumuleras mellan besök.
@@ -25,6 +31,8 @@ export default async function ProfilePage() {
   const repository = new SupabaseProfileRepository(supabase);
   const profile = await repository.load(user.id);
   const decisions = profile?.decisions ?? [];
+
+  const inboxItems = await loadInbox(supabase, repository, decisions);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-16">
@@ -51,8 +59,11 @@ export default async function ProfilePage() {
           initialDisplayName={profile?.displayName ?? ""}
           initialHeadline={profile?.headline ?? ""}
           initialVisibility={profile?.visibility ?? "private"}
+          initialDiscoverable={profile?.discoverableByRecruiters ?? false}
         />
       </section>
+
+      <AttestationInbox initialItems={inboxItems} />
 
       {decisions.length === 0 ? (
         <div className="rounded-2xl border border-[var(--color-line)] bg-white/50 p-6">
@@ -87,4 +98,53 @@ export default async function ProfilePage() {
       <AccountData />
     </main>
   );
+}
+
+/**
+ * Läser ägarens väntande attesteringar och gör dem redo för inkorgen: kopplar varje
+ * `decisionKey` till rätt beslut (via `decisionIdentity`) och löser upp attesterarens
+ * namn/handle (bara om deras profil är offentlig — vi läcker aldrig en privat
+ * identitet). Ingen userId når klienten. Fel sväljs → tom inkorg (aldrig en krasch).
+ */
+async function loadInbox(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  profiles: SupabaseProfileRepository,
+  decisions: { action: string; sources: string[] }[],
+): Promise<InboxItem[]> {
+  try {
+    const attestations = new SupabaseAttestationRepository(supabase);
+    const pending = await attestations.listPendingForSubject("");
+    if (pending.length === 0) return [];
+
+    // decisionKey → beslutstext, så ägaren ser VAD som intygas.
+    const actionByKey = new Map(
+      decisions.map((d) => [
+        decisionIdentity({
+          action: d.action,
+          sources: d.sources,
+          capabilities: [],
+          responsibility: "unknown",
+          kind: "quote",
+        }),
+        d.action,
+      ]),
+    );
+
+    const attesterIds = [...new Set(pending.map((p) => p.attesterUserId))];
+    const summaries = await profiles.loadPublicSummariesByIds(attesterIds);
+    const byId = new Map(summaries.map((s) => [s.userId, s]));
+
+    return pending.map((p) => {
+      const summary = byId.get(p.attesterUserId);
+      return {
+        id: p.id,
+        decisionAction: actionByKey.get(p.decisionKey) ?? null,
+        attesterName: summary?.displayName ?? null,
+        attesterHandle: summary?.handle ?? null,
+        motivation: p.motivation,
+      };
+    });
+  } catch {
+    return [];
+  }
 }

@@ -42,9 +42,32 @@ export type {
 export { parseReflection, isGrounded, PARSE_LIMITS } from "./reflection/parse";
 export { runReflection } from "./reflection/runReflection";
 
+// Beslutsidentitet: systemets stabila, innehållsbaserade nyckel för "samma beslut"
+export { decisionIdentity } from "./decisionIdentity";
+
 // Bevisgradering: hur underbyggt ett påstående är (Fas 7 — kilen "bevisat, inte påstått")
 export type { EvidenceTier } from "./evidence/evidence";
 export { evidenceTier, outcomeCoverage } from "./evidence/evidence";
+
+// Attestering: nätverket intygar ett beslut → bevisgraden `attested` (Fas 7, Del 3)
+export type {
+  Attestation,
+  AttestationInput,
+  AttestationStatus,
+} from "./attestation/attestation";
+export {
+  acceptedDecisionKeys,
+  canGiveMore,
+  isValidMotivation,
+  normalizeMotivation,
+  remainingBudget,
+  MAX_ACTIVE_ATTESTATIONS,
+  MOTIVATION_MIN,
+  MOTIVATION_MAX,
+} from "./attestation/attestation";
+export type { AttestationRepository } from "./attestation/attestationRepository";
+export { InMemoryAttestationRepository } from "./attestation/inMemoryAttestationRepository";
+export { SupabaseAttestationRepository } from "./attestation/supabaseAttestationRepository";
 
 // Robusthet: rate limiting (utbytbart lager, som AIEngine)
 export {
@@ -175,6 +198,12 @@ export { InMemoryJobRepository } from "./jobs/inMemoryJobRepository";
 export { SupabaseJobRepository } from "./jobs/supabaseJobRepository";
 export { matchJobs } from "./jobs/matchJobs";
 export type { JobMatch, JobSkillEvidence } from "./jobs/matchJobs";
+export { searchCandidates } from "./jobs/searchCandidates";
+export type {
+  CandidateInput,
+  CandidateMatch,
+  CandidateSkillEvidence,
+} from "./jobs/searchCandidates";
 
 // Ansökningar: den grundade profilen som ansökan (utbytbart lager — in-memory + Supabase)
 export type {

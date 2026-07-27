@@ -37,6 +37,13 @@ export interface StoredProfile {
   decisions: Decision[];
   /** Synlighet. Default `private`. */
   visibility: ProfileVisibility;
+  /**
+   * Opt-in för rekryterarsök (CLAUDE.md 9.3 — specifikt, informerat samtycke).
+   * "Offentlig" räcker inte: att LISTAS i ett rekryteringsverktyg är ett eget,
+   * uttryckligt val. Default `false`. Meningsfull bara när `visibility` är
+   * `public` — upprätthålls server-sidan.
+   */
+  discoverableByRecruiters: boolean;
   /** Användarnamn för den delbara länken (/u/handle). Gemener. Valfri tills satt. */
   handle?: string;
   /** Visningsnamn (fritext, användaren väljer). Valfri. */
@@ -71,6 +78,20 @@ export interface PublicProfileSummary {
   handle: string;
   displayName: string | null;
   headline: string | null;
+}
+
+/**
+ * En offentlig profil som dessutom valt att synas i rekryterarsök
+ * (`discoverable_by_recruiters = true`). Bär `decisions` (substansen som rankas)
+ * och `userId` — men userId är en SERVER-komposition (för att slå upp
+ * attesteringar), aldrig en klientyta. Klientytor visar handle/namn/headline.
+ */
+export interface DiscoverableProfile {
+  userId: string;
+  handle: string;
+  displayName: string | null;
+  headline: string | null;
+  decisions: Decision[];
 }
 
 /**
@@ -124,4 +145,13 @@ export interface ProfileRepository {
    * Privata eller okända id:n utelämnas ur resultatet.
    */
   loadPublicSummariesByIds(userIds: string[]): Promise<PublicProfileSummary[]>;
+
+  /**
+   * Profiler som är OFFENTLIGA och har valt att synas i rekryterarsök
+   * (opt-in, `discoverable_by_recruiters = true`), med sina beslut för rankning.
+   * Detta är den enda läsvägen som listar många profiler för upptäckt. `userId`
+   * ingår som SERVER-komposition (för attesterings-uppslag) och lämnar aldrig
+   * till klienten. Ej-offentliga eller ej-opt-in-profiler utelämnas.
+   */
+  listDiscoverableProfiles(): Promise<DiscoverableProfile[]>;
 }

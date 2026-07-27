@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
+  acceptedDecisionKeys,
   isValidHandle,
   outcomeCoverage,
   relationshipState,
+  remainingBudget,
+  SupabaseAttestationRepository,
   SupabaseBlockRepository,
   SupabaseConnectionRepository,
   SupabaseProfileRepository,
@@ -12,7 +15,9 @@ import type { PublicProfile, RelationshipState } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { DecisionList } from "@/components/DecisionList";
+import type { AttesterNote } from "@/components/DecisionList";
 import { ConnectButton } from "@/components/ConnectButton";
+import { AttestButton } from "@/components/AttestButton";
 import { ReportButton } from "@/components/ReportButton";
 import { BlockButton } from "@/components/BlockButton";
 
@@ -61,18 +66,25 @@ export async function generateMetadata({
 interface ViewerContext {
   connectState: RelationshipState | "signed_out";
   iBlocked: boolean;
+  /** Får besökaren attestera ägarens beslut? (accepterad kontakt, ej blockerad.) */
+  canAttest: boolean;
+  /** Hur många attesteringar besökaren har kvar att ge (knapphet). */
+  remainingAttestations: number;
 }
 
 /**
  * Räknar ut den inloggade besökarens läge gentemot profilägaren: vilket tillstånd
- * "Anslut"-knappen ska visa, och om besökaren har blockerat ägaren. `signed_out`
- * om ingen är inloggad. Ägarens userId löses upp på servern och skickas aldrig
- * till klienten.
+ * "Anslut"-knappen ska visa, om besökaren har blockerat ägaren, och om besökaren
+ * får attestera (en accepterad kontakt) samt hur många attesteringar hen har kvar.
+ * `signed_out` om ingen är inloggad. Ägarens userId löses upp på servern och
+ * skickas aldrig till klienten.
  */
 async function loadViewerContext(handle: string): Promise<ViewerContext> {
   const signedOut: ViewerContext = {
     connectState: "signed_out",
     iBlocked: false,
+    canAttest: false,
+    remainingAttestations: 0,
   };
   if (!isSupabaseConfigured()) return signedOut;
   try {
@@ -86,7 +98,9 @@ async function loadViewerContext(handle: string): Promise<ViewerContext> {
     // Löser upp ägaren om betraktaren får se profilen (offentlig eller kontakt).
     const ownerId = await profiles.findUserIdByVisibleHandle(handle);
     if (!ownerId) return signedOut;
-    if (ownerId === user.id) return { connectState: "self", iBlocked: false };
+    if (ownerId === user.id) {
+      return { ...signedOut, connectState: "self" };
+    }
 
     const blocks = new SupabaseBlockRepository(supabase);
     const connections = new SupabaseConnectionRepository(supabase);
@@ -94,12 +108,64 @@ async function loadViewerContext(handle: string): Promise<ViewerContext> {
       blocks.hasBlocked(user.id, ownerId),
       connections.findBetween(user.id, ownerId),
     ]);
-    return {
-      connectState: relationshipState(connection, user.id, ownerId),
-      iBlocked,
-    };
+    const connectState = relationshipState(connection, user.id, ownerId);
+    const canAttest = connectState === "connected" && !iBlocked;
+
+    let remainingAttestations = 0;
+    if (canAttest) {
+      const attestations = new SupabaseAttestationRepository(supabase);
+      const active = await attestations.countActiveGivenBy(user.id);
+      remainingAttestations = remainingBudget(active);
+    }
+
+    return { connectState, iBlocked, canAttest, remainingAttestations };
   } catch {
     return signedOut;
+  }
+}
+
+/**
+ * Godkända intyg om en profils beslut, färdiga för visning: vilka beslutsnycklar
+ * som är attesterade (driver bevisgraden) och vem+motivering per nyckel.
+ * Definer-funktionen släpper bara igenom rader om betraktaren får se profilen.
+ * Attesterarens namn/handle visas bara om deras egen profil är offentlig — vi
+ * läcker aldrig en privat identitet (§9), men motiveringen (substansen) visas alltid.
+ */
+async function loadAttestationDisplay(handle: string): Promise<{
+  attestedKeys: Set<string>;
+  notesByKey: Map<string, AttesterNote[]>;
+}> {
+  const empty = { attestedKeys: new Set<string>(), notesByKey: new Map() };
+  if (!isSupabaseConfigured()) return empty;
+  try {
+    const supabase = await createClient();
+    const profiles = new SupabaseProfileRepository(supabase);
+    const ownerId = await profiles.findUserIdByVisibleHandle(handle);
+    if (!ownerId) return empty;
+
+    const attestations = new SupabaseAttestationRepository(supabase);
+    const accepted = await attestations.listAcceptedForSubject(ownerId);
+    if (accepted.length === 0) return empty;
+
+    const attesterIds = [...new Set(accepted.map((a) => a.attesterUserId))];
+    const summaries = await profiles.loadPublicSummariesByIds(attesterIds);
+    const byId = new Map(summaries.map((s) => [s.userId, s]));
+
+    const notesByKey = new Map<string, AttesterNote[]>();
+    for (const a of accepted) {
+      const summary = byId.get(a.attesterUserId);
+      const note: AttesterNote = {
+        name: summary?.displayName ?? null,
+        handle: summary?.handle ?? null,
+        motivation: a.motivation,
+      };
+      const list = notesByKey.get(a.decisionKey) ?? [];
+      list.push(note);
+      notesByKey.set(a.decisionKey, list);
+    }
+    return { attestedKeys: acceptedDecisionKeys(accepted), notesByKey };
+  } catch {
+    return empty;
   }
 }
 
@@ -113,7 +179,11 @@ export default async function PublicProfilePage({
 
   if (!profile) notFound();
 
-  const { connectState, iBlocked } = await loadViewerContext(handle);
+  const [{ connectState, iBlocked, canAttest, remainingAttestations }, attest] =
+    await Promise.all([
+      loadViewerContext(handle),
+      loadAttestationDisplay(handle),
+    ]);
   const name = profile.displayName ?? `@${profile.handle}`;
   const signedInVisitor =
     connectState !== "self" && connectState !== "signed_out";
@@ -169,10 +239,28 @@ export default async function PublicProfilePage({
               Vad {name} faktiskt gjort
             </h2>
             <p className="mb-6 text-sm text-[var(--color-muted)]">
-              Varje prestation bär sin bevisgrad. ○ självrapporterat betyder att den
-              vilar på personens egna ord — attestering från nätverket kommer.
+              Varje prestation bär sin bevisgrad. ○ självrapporterat vilar på
+              personens egna ord; ● attesterat betyder att en kontakt har intygat det
+              och att {name} har godkänt intyget.
             </p>
-            <DecisionList decisions={profile.decisions} showEvidence />
+            <DecisionList
+              decisions={profile.decisions}
+              showEvidence
+              attestedKeys={attest.attestedKeys}
+              notesByKey={attest.notesByKey}
+              {...(canAttest
+                ? {
+                    renderAttest: (decisionKey, decisionAction) => (
+                      <AttestButton
+                        handle={profile.handle}
+                        decisionKey={decisionKey}
+                        decisionAction={decisionAction}
+                        remaining={remainingAttestations}
+                      />
+                    ),
+                  }
+                : {})}
+            />
           </>
         )}
       </section>

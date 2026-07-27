@@ -1,4 +1,5 @@
 import type {
+  DiscoverableProfile,
   ProfileRepository,
   PublicProfile,
   PublicProfileSummary,
@@ -133,6 +134,26 @@ export class InMemoryProfileRepository implements ProfileRepository {
       }
     }
     return summaries;
+  }
+
+  async listDiscoverableProfiles(): Promise<DiscoverableProfile[]> {
+    const found: DiscoverableProfile[] = [];
+    for (const profile of this.store.values()) {
+      if (
+        profile.visibility === "public" &&
+        profile.discoverableByRecruiters &&
+        profile.handle
+      ) {
+        found.push({
+          userId: profile.userId,
+          handle: profile.handle,
+          displayName: profile.displayName ?? null,
+          headline: profile.headline ?? null,
+          decisions: structuredClone(profile.decisions),
+        });
+      }
+    }
+    return found;
   }
 }
 
