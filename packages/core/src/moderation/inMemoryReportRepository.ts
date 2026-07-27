@@ -33,6 +33,13 @@ export class InMemoryReportRepository implements ReportRepository {
     return { ...report };
   }
 
+  async listForReview(limit = 200): Promise<Report[]> {
+    return [...this.reports]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, limit)
+      .map((r) => ({ ...r }));
+  }
+
   /** Endast för test/granskning: alla lagrade rapporter. */
   all(): Report[] {
     return this.reports.map((r) => ({ ...r }));

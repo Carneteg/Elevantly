@@ -15,4 +15,11 @@ export interface ReportRepository {
     reason: string,
     now: string,
   ): Promise<Report>;
+
+  /**
+   * Granskningskön: rapporter nyast först, begränsat till `limit`. Endast för
+   * granskare — i Supabase-varianten gäller RLS så att bara en admin når något
+   * (via `is_admin()`); vanliga användare får en tom lista. Se `supabase/migrations/`.
+   */
+  listForReview(limit?: number): Promise<Report[]>;
 }

@@ -101,8 +101,14 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
   vävs in i policyerna för att skicka meddelande, skapa/acceptera kontakt och se
   flödesinlägg. Route-koden behåller sina kontroller för vänliga felmeddelanden —
   två lås, inte ett. Nu kan ingen app-väg glömma spärren.
-- Nästa: en **granskningsvy** för rapporter/blockeringar (admin) — kräver ett
-  admin-/rollbeslut (vem granskar, och hur avgränsas åtkomsten).
+- Byggt (fjärde bricken): **granskningskö för rapporter (admin)**. Migration `0010`
+  inför en `admins`-tabell + `is_admin()` (security definer) och en RLS-policy så
+  att bara granskare kan LÄSA rapporter (medlemskap hanteras out-of-band via SQL —
+  ingen kan ge sig själv admin via API:t). `ReportRepository.listForReview` +
+  en server-skyddad `/admin`-sida (404 för icke-granskare) som visar flaggat
+  innehåll nyast först. Ingen automatik — en signal för mänskligt beslut.
+- Nästa: åtgärder i granskningsvyn (markera hanterad/avvisad), och ett beslut om
+  huruvida blockeringar ska exponeras för granskare (idag privata by design).
 
 ### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
 **Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med

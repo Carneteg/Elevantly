@@ -51,6 +51,18 @@ export class SupabaseReportRepository implements ReportRepository {
     if (error) throw new Error(`Kunde inte skapa rapport: ${error.message}`);
     return rowToReport(data);
   }
+
+  async listForReview(limit = 200): Promise<Report[]> {
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(COLUMNS)
+      .order("created_at", { ascending: false })
+      .limit(limit)
+      .returns<ReportRow[]>();
+
+    if (error) throw new Error(`Kunde inte läsa rapporter: ${error.message}`);
+    return (data ?? []).map(rowToReport);
+  }
 }
 
 function rowToReport(row: ReportRow): Report {
