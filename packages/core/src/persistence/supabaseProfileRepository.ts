@@ -101,12 +101,43 @@ export class SupabaseProfileRepository implements ProfileRepository {
     return data ? publicRowToProfile(data) : null;
   }
 
+  async loadVisibleProfileByHandle(
+    handle: string,
+  ): Promise<PublicProfile | null> {
+    // Ingen synlighetsfilter här — row-level security avgör om betraktaren får se
+    // raden (offentlig, `contacts` för en kontakt, eller egen). Se migrationerna.
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select(PUBLIC_COLUMNS)
+      .eq("handle", normalizeHandle(handle))
+      .maybeSingle<PublicRow>();
+
+    if (error) {
+      throw new Error(`Kunde inte läsa profil: ${error.message}`);
+    }
+    return data ? publicRowToProfile(data) : null;
+  }
+
   async findUserIdByPublicHandle(handle: string): Promise<string | null> {
     const { data, error } = await this.client
       .from(TABLE)
       .select("user_id")
       .eq("handle", normalizeHandle(handle))
       .eq("visibility", "public")
+      .maybeSingle<{ user_id: string }>();
+
+    if (error) {
+      throw new Error(`Kunde inte slå upp handle: ${error.message}`);
+    }
+    return data ? data.user_id : null;
+  }
+
+  async findUserIdByVisibleHandle(handle: string): Promise<string | null> {
+    // RLS avgör synligheten — vi filtrerar bara på handle.
+    const { data, error } = await this.client
+      .from(TABLE)
+      .select("user_id")
+      .eq("handle", normalizeHandle(handle))
       .maybeSingle<{ user_id: string }>();
 
     if (error) {

@@ -32,6 +32,13 @@ export function ProfileEditor({
   const [message, setMessage] = useState("");
 
   const isPublic = visibility === "public";
+  const isPrivate = visibility === "private";
+
+  const savedMessage: Record<ProfileVisibility, string> = {
+    private: "Sparat. Din profil är privat.",
+    contacts: "Sparat. Din profil syns för dina kontakter.",
+    public: "Sparat. Din profil är offentlig.",
+  };
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -56,11 +63,7 @@ export function ProfileEditor({
       }
 
       setStatus("saved");
-      setMessage(
-        isPublic
-          ? "Sparat. Din profil är offentlig."
-          : "Sparat. Din profil är privat.",
-      );
+      setMessage(savedMessage[visibility]);
     } catch {
       setStatus("error");
       setMessage("Kunde inte spara just nu. Försök igen.");
@@ -126,7 +129,8 @@ export function ProfileEditor({
           />
         </div>
         <p id="handle-hint" className="text-sm text-[var(--color-muted)]">
-          3–30 tecken: a–z, 0–9, _ eller -. Krävs för att göra profilen offentlig.
+          3–30 tecken: a–z, 0–9, _ eller -. Krävs för att dela profilen (kontakter
+          eller offentlig).
         </p>
       </div>
 
@@ -137,13 +141,28 @@ export function ProfileEditor({
             type="radio"
             name="visibility"
             value="private"
-            checked={!isPublic}
+            checked={isPrivate}
             onChange={() => setVisibility("private")}
           />
           <span>
             <span className="font-medium">Privat</span>
             <span className="block text-sm text-[var(--color-muted)]">
               Bara du ser din profil.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-center gap-3 rounded-xl border border-[var(--color-line)] bg-white p-3">
+          <input
+            type="radio"
+            name="visibility"
+            value="contacts"
+            checked={visibility === "contacts"}
+            onChange={() => setVisibility("contacts")}
+          />
+          <span>
+            <span className="font-medium">Kontakter</span>
+            <span className="block text-sm text-[var(--color-muted)]">
+              Bara dina accepterade kontakter ser namn, headline och dina beslut.
             </span>
           </span>
         </label>
@@ -172,14 +191,14 @@ export function ProfileEditor({
         >
           {status === "saving" ? "Sparar …" : "Spara profil"}
         </button>
-        {isPublic && handle && (
+        {!isPrivate && handle && (
           <a
             href={`/u/${handle}`}
             className="text-sm underline"
             target="_blank"
             rel="noreferrer"
           >
-            Visa offentlig profil ↗
+            Visa din profilsida ↗
           </a>
         )}
       </div>

@@ -43,7 +43,11 @@ export async function POST(
 
   // Synlighet krävs och måste vara ett giltigt värde.
   const visibility = body.visibility;
-  if (visibility !== "private" && visibility !== "public") {
+  if (
+    visibility !== "private" &&
+    visibility !== "contacts" &&
+    visibility !== "public"
+  ) {
     return jsonError("Ogiltig synlighet.", 400);
   }
 
@@ -60,10 +64,11 @@ export async function POST(
     );
   }
 
-  // En offentlig profil måste vara nåbar — den kräver ett användarnamn.
-  if (visibility === "public" && !handle) {
+  // En delad profil (kontakter eller offentlig) måste vara nåbar via /u/handle —
+  // den kräver ett användarnamn. Privat kräver inget.
+  if (visibility !== "private" && !handle) {
     return jsonError(
-      "Välj ett användarnamn innan du gör profilen offentlig.",
+      "Välj ett användarnamn innan du delar profilen.",
       400,
     );
   }

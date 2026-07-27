@@ -132,5 +132,37 @@ describe("InMemoryProfileRepository", () => {
       );
       expect(await repo.loadPublicProfileByHandle("saknas")).toBeNull();
     });
+
+    it("visar inte en contacts-profil på den publika vägen", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(
+        profile("user-1", ["A"], { visibility: "contacts", handle: "tobias" }),
+      );
+      // Publik upptäckt ser bara offentliga profiler.
+      expect(await repo.loadPublicProfileByHandle("tobias")).toBeNull();
+      expect(await repo.findUserIdByPublicHandle("tobias")).toBeNull();
+    });
+  });
+
+  describe("loadVisibleProfileByHandle (RLS avgör i drift)", () => {
+    it("hämtar offentlig och contacts-profil, men inte privat", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(profile("u-pub", ["A"], { visibility: "public", handle: "pub" }));
+      await repo.save(profile("u-con", ["B"], { visibility: "contacts", handle: "con" }));
+      await repo.save(profile("u-pri", ["C"], { visibility: "private", handle: "pri" }));
+
+      expect(await repo.loadVisibleProfileByHandle("pub")).not.toBeNull();
+      expect(await repo.loadVisibleProfileByHandle("con")).not.toBeNull();
+      expect(await repo.loadVisibleProfileByHandle("pri")).toBeNull();
+    });
+
+    it("findUserIdByVisibleHandle löser upp icke-privata, aldrig privata", async () => {
+      const repo = new InMemoryProfileRepository();
+      await repo.save(profile("u-con", ["B"], { visibility: "contacts", handle: "con" }));
+      await repo.save(profile("u-pri", ["C"], { visibility: "private", handle: "pri" }));
+
+      expect(await repo.findUserIdByVisibleHandle("con")).toBe("u-con");
+      expect(await repo.findUserIdByVisibleHandle("pri")).toBeNull();
+    });
   });
 });

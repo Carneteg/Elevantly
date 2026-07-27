@@ -13,10 +13,13 @@ import type { Decision } from "../decision";
  */
 
 /**
- * Profilens synlighet. Default är `private` — att bli offentlig är ett
- * uttryckligt opt-in (CLAUDE.md 9.3). `contacts` läggs till när kontakter finns.
+ * Profilens synlighet (CLAUDE.md 9.3 — användaren styr, opt-in i steg):
+ * - `private`  Bara du ser din profil. Default.
+ * - `contacts` Dina accepterade kontakter ser den (upprätthålls av RLS).
+ * - `public`   Vem som helst med länken ser den.
+ * Att öka synligheten är alltid ett uttryckligt val, aldrig förkryssat.
  */
-export type ProfileVisibility = "private" | "public";
+export type ProfileVisibility = "private" | "contacts" | "public";
 
 /**
  * En användares sparade professionella profil: den strukturerade kärnan som
@@ -85,9 +88,19 @@ export interface ProfileRepository {
   delete(userId: string): Promise<void>;
   /**
    * Hämtar den publika vyn av en profil via dess handle — endast om profilen är
-   * offentlig, annars `null`. Kräver ingen inloggning.
+   * offentlig, annars `null`. Kräver ingen inloggning. Används för OFFENTLIG
+   * upptäckt (t.ex. att skapa en koppling), aldrig för kontakts-synlighet.
    */
   loadPublicProfileByHandle(handle: string): Promise<PublicProfile | null>;
+
+  /**
+   * Hämtar en profil via handle om den INLOGGADE betraktaren får se den —
+   * offentlig för alla, `contacts` för en accepterad kontakt, eller ens egen.
+   * Beslutet fattas av row-level security i drift (Supabase-varianten filtrerar
+   * INTE på synlighet; RLS avgör). Annars `null`. Det här är läsvägen för
+   * profilsidan (/u/handle) så att kontakter når en `contacts`-profil.
+   */
+  loadVisibleProfileByHandle(handle: string): Promise<PublicProfile | null>;
 
   /**
    * Slår upp `userId` för innehavaren av ett OFFENTLIGT handle, eller `null`.
@@ -95,6 +108,15 @@ export interface ProfileRepository {
    * att någonsin skicka userId till klienten. Privata/okända handles → `null`.
    */
   findUserIdByPublicHandle(handle: string): Promise<string | null>;
+
+  /**
+   * Slår upp `userId` för innehavaren av ett handle som den INLOGGADE betraktaren
+   * får se (offentlig, `contacts` för en kontakt, eller egen) — annars `null`.
+   * RLS avgör i drift. Används server-sidan för att räkna ut betraktarkontext
+   * (t.ex. rapportera/blockera) även på en `contacts`-profil. userId lämnar
+   * aldrig servern.
+   */
+  findUserIdByVisibleHandle(handle: string): Promise<string | null>;
 
   /**
    * Sammanfattningar av OFFENTLIGA profiler för en uppsättning userId:n — för
