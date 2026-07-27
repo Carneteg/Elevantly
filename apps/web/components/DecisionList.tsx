@@ -3,7 +3,9 @@ import type {
   Decision,
   ResponsibilityLevel,
 } from "@elevantly/core";
+import { evidenceTier } from "@elevantly/core";
 import { Sources } from "./Sources";
+import { EvidenceTag } from "./EvidenceTag";
 
 /** Ärlig formulering av ansvarsnivå — höjer aldrig nivån, döljs vid "unknown". */
 function responsibilityLabel(level: ResponsibilityLevel): string | null {
@@ -37,7 +39,14 @@ function confidenceLabel(confidence: Confidence): string {
  * tillståndslös; samma ärlighetsregler som i speglingen — inget visas som fakta
  * utan spårbar källa.
  */
-export function DecisionList({ decisions }: { decisions: Decision[] }) {
+export function DecisionList({
+  decisions,
+  showEvidence = false,
+}: {
+  decisions: Decision[];
+  /** Visa bevisgradering per prestation (Zon C på besökarens profilvy). */
+  showEvidence?: boolean;
+}) {
   return (
     <ul className="flex flex-col gap-6">
       {decisions.map((decision, i) => (
@@ -45,7 +54,10 @@ export function DecisionList({ decisions }: { decisions: Decision[] }) {
           key={i}
           className="rounded-xl border border-[var(--color-line)] bg-white/50 p-5"
         >
-          <p className="text-lg leading-snug">{decision.action}</p>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <p className="text-lg leading-snug">{decision.action}</p>
+            {showEvidence && <EvidenceTag tier={evidenceTier(decision)} />}
+          </div>
           {responsibilityLabel(decision.responsibility) && (
             <p className="mt-1 text-sm text-[var(--color-muted)]">
               {responsibilityLabel(decision.responsibility)}

@@ -104,6 +104,16 @@ Koncentrera krutet på **verifieringsloopen** först — allt annat är värdel�
 > **besökare (rekryterare)** ser en profil. Byggd på befintligt designspråk (mörk
 > bas, mintgrön accent, seriff-rubriker, monospace för metadata, mjukt upphöjda kort).
 > Detta är nästa byggfokus — profilvyn + bevisgradering + desktop + rekryterarsök.
+>
+> **Visuell referens:** [`docs/mockups/elevantly-profil-desktop.html`](mockups/elevantly-profil-desktop.html)
+> (produktägarens mockup — självständig HTML, öppna i webbläsare).
+
+**Byggt (fas 7-1): bevisgraderad profilvy.** `/u/[handle]` följer nu Zon A–C:
+identitetshuvud med självvald inriktning (monospace, inga fåfänge-siffror) + en lugn
+förtroendeindikator ("X av Y prestationer har kopplat utfall" via `outcomeCoverage`),
+och varje prestation bär en **bevisgrad** (`evidenceTier` → `EvidenceTag`). v1 märker
+allt som `○ självrapporterat` — ärligt, eftersom kontextlänkning/attestering ännu inte
+finns (§8.3/§11). Nästa skivor: desktop-3-kolumnsram, attesteringsflöde, rekryterarsök.
 
 ### Del 1 — Desktop-ramen (skalet)
 Idag är UI:t låst i mobilkolumn. På desktop (≥1024px) går vi från en till **tre

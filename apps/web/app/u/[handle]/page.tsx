@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import {
   isValidHandle,
+  outcomeCoverage,
   relationshipState,
   SupabaseBlockRepository,
   SupabaseConnectionRepository,
@@ -127,10 +128,23 @@ export default async function PublicProfilePage({
           {name}
         </h1>
         {profile.headline && (
-          <p className="mt-2 text-lg text-[var(--color-muted)]">
+          <p className="mt-2 font-mono text-sm tracking-wide text-[var(--color-muted)]">
             {profile.headline}
           </p>
         )}
+        {profile.decisions.length > 0 &&
+          (() => {
+            const { total, withOutcome } = outcomeCoverage(profile.decisions);
+            return (
+              <p className="mt-4 text-sm text-[var(--color-muted)]">
+                <span className="font-medium text-[var(--color-ink)]">
+                  {withOutcome} av {total}
+                </span>{" "}
+                {total === 1 ? "prestation" : "prestationer"} har kopplat utfall.
+                Ingen fåfänge-statistik — bara vad som faktiskt beskrivits.
+              </p>
+            );
+          })()}
         <div className="mt-5">
           {iBlocked ? (
             <p className="text-sm text-[var(--color-muted)]">
@@ -151,10 +165,14 @@ export default async function PublicProfilePage({
           </div>
         ) : (
           <>
-            <h2 className="mb-6 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]">
               Vad {name} faktiskt gjort
             </h2>
-            <DecisionList decisions={profile.decisions} />
+            <p className="mb-6 text-sm text-[var(--color-muted)]">
+              Varje prestation bär sin bevisgrad. ○ självrapporterat betyder att den
+              vilar på personens egna ord — attestering från nätverket kommer.
+            </p>
+            <DecisionList decisions={profile.decisions} showEvidence />
           </>
         )}
       </section>

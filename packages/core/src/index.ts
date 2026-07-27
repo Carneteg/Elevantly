@@ -42,6 +42,10 @@ export type {
 export { parseReflection, isGrounded, PARSE_LIMITS } from "./reflection/parse";
 export { runReflection } from "./reflection/runReflection";
 
+// Bevisgradering: hur underbyggt ett påstående är (Fas 7 — kilen "bevisat, inte påstått")
+export type { EvidenceTier } from "./evidence/evidence";
+export { evidenceTier, outcomeCoverage } from "./evidence/evidence";
+
 // Robusthet: rate limiting (utbytbart lager, som AIEngine)
 export {
   InMemoryRateLimiter,
