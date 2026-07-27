@@ -2,18 +2,20 @@ import { redirect } from "next/navigation";
 import {
   matchJobs,
   StaticSkillTaxonomy,
+  SupabaseApplicationRepository,
   SupabaseJobRepository,
   SupabaseProfileRepository,
 } from "@elevantly/core";
-import type { Confidence, JobMatch } from "@elevantly/core";
+import type { Application, ApplicationStatus, Confidence, JobMatch } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
+import { ApplyButton } from "@/components/ApplyButton";
+import { ReportButton } from "@/components/ReportButton";
 
 /**
- * Jobb — "Vilka jobb passar det jag faktiskt gjort?" (roadmap pelare 6, fas 6a).
- * Smartare än en sökdjungel: jobb och kandidat beskrivs i EN kanonisk taxonomi, så
- * matchningen sker på begrepp och bevisade beslut — inte på nyckelord. Varje träff
- * visar exakt vad den vilar på (§8.3/§8.5). Ingen ansökan byggd än; detta är
- * kandidatvärdet först (§6.2). Seedade annonser tills arbetsgivare finns.
+ * Jobb — "Vilka jobb passar det jag faktiskt gjort?" (roadmap pelare 6). Smartare
+ * än en sökdjungel: jobb och kandidat beskrivs i EN kanonisk taxonomi, så matchningen
+ * sker på begrepp och bevisade beslut — inte på nyckelord. Varje träff visar exakt
+ * vad den vilar på (§8.3/§8.5). Din grundade profil ÄR ansökan (§9.3).
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +24,13 @@ const CONFIDENCE_LABEL: Record<Confidence, string> = {
   low: "låg",
   medium: "medel",
   high: "hög",
+};
+
+const STATUS_LABEL: Record<ApplicationStatus, string> = {
+  submitted: "Inskickad",
+  reviewing: "Granskas",
+  accepted: "Antagen",
+  declined: "Avböjd",
 };
 
 export default async function JobsPage() {
@@ -33,11 +42,13 @@ export default async function JobsPage() {
 
   const profile = await new SupabaseProfileRepository(supabase).load(user.id);
   const decisions = profile?.decisions ?? [];
-  const [skills, jobs] = await Promise.all([
+  const [skills, jobs, applications] = await Promise.all([
     new StaticSkillTaxonomy().list(),
     new SupabaseJobRepository(supabase).listPublished(),
+    new SupabaseApplicationRepository(supabase).listForCandidate(user.id),
   ]);
   const matches = matchJobs(decisions, jobs, skills);
+  const appliedJobIds = new Set(applications.map((a) => a.jobId));
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-2xl flex-col px-6 py-16">
@@ -53,6 +64,22 @@ export default async function JobsPage() {
           krav — samma kompetens, oavsett vad den kallas. Varje träff visar varför.
         </p>
       </header>
+
+      {applications.length > 0 && (
+        <section aria-labelledby="apps-heading" className="mb-12">
+          <h2
+            id="apps-heading"
+            className="mb-3 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)]"
+          >
+            Dina ansökningar
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {applications.map((app) => (
+              <ApplicationRow key={app.id} app={app} />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {decisions.length === 0 ? (
         <EmptyState
@@ -77,7 +104,11 @@ export default async function JobsPage() {
           </p>
           <ul className="flex flex-col gap-4">
             {matches.map((match) => (
-              <JobCard key={match.job.id} match={match} />
+              <JobCard
+                key={match.job.id}
+                match={match}
+                applied={appliedJobIds.has(match.job.id)}
+              />
             ))}
           </ul>
           <p className="mt-10 text-sm text-[var(--color-muted)]">
@@ -89,7 +120,7 @@ export default async function JobsPage() {
     </main>
   );
 
-  function JobCard({ match }: { match: JobMatch }) {
+  function JobCard({ match, applied }: { match: JobMatch; applied: boolean }) {
     const { job } = match;
     const meta = [job.location, job.remote ? "distans möjligt" : null]
       .filter(Boolean)
@@ -131,9 +162,30 @@ export default async function JobsPage() {
             ))}
           </ul>
         </div>
+
+        <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
+          <ApplyButton jobId={job.id} applied={applied} />
+          <ReportButton subjectType="job" subjectId={job.id} />
+        </div>
       </li>
     );
   }
+}
+
+function ApplicationRow({ app }: { app: Application }) {
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-line)] bg-white/50 px-4 py-3">
+      <span className="text-sm">
+        <span className="font-medium">{app.jobTitle ?? "Jobb"}</span>
+        {app.companyName ? (
+          <span className="text-[var(--color-muted)]"> · {app.companyName}</span>
+        ) : null}
+      </span>
+      <span className="rounded-full bg-[var(--color-canvas)] px-3 py-1 text-xs font-medium text-[var(--color-muted)]">
+        {STATUS_LABEL[app.status]}
+      </span>
+    </li>
+  );
 }
 
 function EmptyState({ title, body }: { title: string; body: string }) {

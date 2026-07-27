@@ -26,6 +26,9 @@ export interface JobRepository {
   /** Publicerade jobb (för kandidatsidan `/jobs`), nyast först, begränsat till `limit`. */
   listPublished(limit?: number): Promise<Job[]>;
 
+  /** Hämtar ett jobb via id om betraktaren får se det (publicerat eller medlem), annars `null`. */
+  load(id: string): Promise<Job | null>;
+
   /** Sätter status på ett jobb — bara ett företags medlemmar (RLS). */
   setStatus(id: string, companyId: string, status: JobStatus): Promise<void>;
 }

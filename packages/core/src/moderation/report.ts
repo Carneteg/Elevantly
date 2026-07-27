@@ -6,7 +6,7 @@
  */
 
 /** Vad en rapport gäller. */
-export type ReportSubjectType = "profile" | "post" | "message";
+export type ReportSubjectType = "profile" | "post" | "message" | "job";
 
 /**
  * Var en rapport står i granskningen. `open` = väntar på beslut (kön), `resolved`

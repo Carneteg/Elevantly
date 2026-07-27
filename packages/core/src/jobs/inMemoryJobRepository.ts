@@ -54,6 +54,11 @@ export class InMemoryJobRepository implements JobRepository {
       .map((j) => structuredClone(j));
   }
 
+  async load(id: string): Promise<Job | null> {
+    const job = this.jobs.find((j) => j.id === id);
+    return job ? structuredClone(job) : null;
+  }
+
   async setStatus(id: string, companyId: string, status: JobStatus): Promise<void> {
     const job = this.jobs.find((j) => j.id === id && j.companyId === companyId);
     if (job) job.status = status;

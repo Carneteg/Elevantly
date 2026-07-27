@@ -17,6 +17,7 @@ const SUBJECT_LABEL: Record<Report["subjectType"], string> = {
   profile: "Profil",
   post: "Inlägg",
   message: "Meddelande",
+  job: "Jobb",
 };
 
 export default async function AdminPage() {

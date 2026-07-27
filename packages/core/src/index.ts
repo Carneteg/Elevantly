@@ -171,3 +171,19 @@ export { InMemoryJobRepository } from "./jobs/inMemoryJobRepository";
 export { SupabaseJobRepository } from "./jobs/supabaseJobRepository";
 export { matchJobs } from "./jobs/matchJobs";
 export type { JobMatch, JobSkillEvidence } from "./jobs/matchJobs";
+
+// Ansökningar: den grundade profilen som ansökan (utbytbart lager — in-memory + Supabase)
+export type {
+  Application,
+  ApplicationInput,
+  ApplicationStatus,
+} from "./applications/application";
+export {
+  isApplicationStatus,
+  normalizeApplicationMessage,
+  APPLICATION_STATUSES,
+  MAX_APPLICATION_MESSAGE,
+} from "./applications/application";
+export type { ApplicationRepository } from "./applications/applicationRepository";
+export { InMemoryApplicationRepository } from "./applications/inMemoryApplicationRepository";
+export { SupabaseApplicationRepository } from "./applications/supabaseApplicationRepository";
