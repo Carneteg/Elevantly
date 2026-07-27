@@ -98,6 +98,76 @@ Koncentrera krutet på **verifieringsloopen** först — allt annat är värdel�
 
 ---
 
+## Fas 7 (nästa): verifieringsloop, profilvy & desktop — UX-spec
+
+> Detaljerad UX-/produktspecifikation för den skärm strategin vilar på: hur en
+> **besökare (rekryterare)** ser en profil. Byggd på befintligt designspråk (mörk
+> bas, mintgrön accent, seriff-rubriker, monospace för metadata, mjukt upphöjda kort).
+> Detta är nästa byggfokus — profilvyn + bevisgradering + desktop + rekryterarsök.
+
+### Del 1 — Desktop-ramen (skalet)
+Idag är UI:t låst i mobilkolumn. På desktop (≥1024px) går vi från en till **tre
+kolumner**, men behåller den lugna, luftiga känslan — vi fyller inte ytan med brus.
+- **Vänster (~220px):** beständig navigation (Spegeln, Flöde, Nätverk, Chatt,
+  Möjligheter — samma poster som mobilens bottenmeny, nu vertikala ikon + etikett).
+- **Mitt (~640px, centrerad):** innehållsscenen, byter med var man är.
+- **Höger (~300px):** kontextuell — på profilen förtroende-panel + attestering, i
+  flödet nätverksförslag. **Aldrig** reklam eller "personer du kanske känner"-spam.
+- **Medvetet:** max innehållsbredd hålls nere även på stora skärmar (läsbar radlängd,
+  luft) — motsatsen till LinkedIns kant-till-kant-kaos. Lugn = varumärket.
+
+### Del 2 — Profilen (den vy som saknas idag)
+Produktens viktigaste skärm: här bevisas eller faller "bevisat, inte påstått". Fyra zoner:
+- **Zon A — Identitetshuvud.** Namn (seriff, stort), en **självvald inriktning** i
+  monospace (t.ex. `Produktledare · omställning & datadrivna beslut`) — aldrig en
+  jobbtitel (inriktning härleds ur vad man gjort). Till höger förtroendeindikatorn
+  (zon D) — ingen poäng, en ärlig sammanfattning ("8 av 11 prestationer har kopplat
+  utfall"). **Ingen** "öppen för jobb"-banner, inga följar-/kontaktsiffror — frånvaron
+  av fåfänge-siffror ÄR varumärket.
+- **Zon B — Ryggraden: beslut & utfall.** Kronologisk (eller efter tyngd) lista av
+  prestationskort i Spegelns struktur: påstående i klarspråk → utfallsrad i den
+  mintgröna faktarutan (`◆ Kopplat till utfall: "Minskade churn 12%"`) → bevisstatus.
+- **Zon C — Bevisgradering (det nya, kritiska).** Varje prestation bär en av tre
+  synliga statusar som monospace-taggar:
+  - `○ självrapporterat` (grå) — sagt, inget mer. Ärligt märkt som obestyrkt.
+  - `◐ kontextförankrat` (dämpad mint) — länkad mätning/tidslinje/dokument gör det troligt.
+  - `● attesterat` (full mint) — en kontakt har intygat det, med kort motivering.
+  **Avgörande beslut:** vi gömmer aldrig svaga påståenden, vi **märker** dem. En helt
+  grå profil är i sig ärlig information till rekryteraren. (Knyter an till `ClaimKind`
+  i koden: `quote`/`interpretation`/`verified` — `verified` reserverad, ännu oanvänd.)
+- **Zon D — Förtroende-panel (höger).** Fördelning självrapporterat/kontextförankrat/
+  attesterat som en enkel stapel + vilka kontakter som attesterat vad. Här kan
+  besökaren agera: en **Kontakta**-knapp, gratis att ta emot (individen betalar aldrig).
+
+### Del 3 — Attesteringsflödet (designa försiktigt)
+Attestering ger bevisen värde men är där LinkedIn föll (gratis + obegränsat → värdelöst).
+Motmedicin i UI:t: att attestera ger **inte** en tumme-upp utan en liten dialog som
+kräver en **kort fritextmotivering** ("Jag satt i teamet och såg churn-siffrorna
+före/efter"). Antalet attesteringar en person kan ge är **medvetet och synligt
+begränsat** — knappheten är designad, vilket gör varje attestering socialt "dyr" och
+därmed trovärdig.
+
+### Del 4 — Rekryterarens sökvy (intäktssidan)
+Intäkten kommer från efterfrågesidan → desktop behöver en **upptäcktsvy för
+rekryterare** som känns som ett *verktyg*, inte ett flöde. Mitten = resultatlista av
+profiler; sidorna = filter. Det avgörande filtret och vår faktiska produktvara:
+**filtrering på bevisstatus** ("visa bara kandidater med *attesterad* erfarenhet av
+produktomställning") — exakt det LinkedIn inte kan, och det rekryteraren betalar för
+(sänker deras största kostnad: tid på uppblåsta CV:n). Varje träff visar en komprimerad
+profilrad med förtroendeindikatorn synlig. **Enda ytan** som får ha "kommersiell"
+densitet — här är användaren betalande och uppgiftsorienterad, inte en privatperson
+att skydda.
+
+### Designprinciper för dessa vyer
+1. **Frånvaro är en funktion** — inga fåfänge-siffror, ingen reklam mot individen;
+   tomrummet kommunicerar värderingen.
+2. **Osäkerhet visas, döljs aldrig** — bevisgraderingen är ärlig snarare än smickrande.
+3. **Knapphet skapar värde** — attestering är avsiktligt begränsad.
+4. **Rekryteraren är den enda betalande, individen den skyddade** — enda ytan med
+   kommersiell densitet är sökvyn.
+
+---
+
 ## ✅ Byggt — den grundade identitetskärnan
 
 **Spegeln v1.** Användarfråga: *"Vad säger det jag faktiskt gjort om vad jag är
