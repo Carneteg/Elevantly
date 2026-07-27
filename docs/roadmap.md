@@ -134,6 +134,13 @@ ESCO/SSYK), **jobbannons-entitet** (strukturerade krav + RLS), **`matchJob`/sök
 `/jobs` med förklarbara träffar) · 6b arbetsgivarkonton + annonsering · 6c
 ansökningar + granskning + samtycke · 6d full ESCO/SSYK-taxonomi (anti-djungel skarpt).
 
+- Byggt (fas 6b-2): **jobbannonsering + riktiga jobb i `/jobs`.** `Job` fick
+  status (`draft`/`published`/`closed`) + `companyId`; `JobRepository` (in-memory +
+  Supabase) för att posta/lista/hantera. Migration `0015` (`jobs` + RLS: alla ser
+  publicerade, medlemmar hanterar egna — återanvänder `is_company_member`).
+  `/company/[id]` (arbetsgivarvy: posta/publicera/stänga) med en strukturerad
+  postningsform där kraven **kryssas ur taxonomin, aldrig fritext**. `/jobs` läser nu
+  riktiga publicerade jobb och matchar dem grundat (6a). Nästa: 6c (ansökningar).
 - Byggt (fas 6b-1): **arbetsgivare som aktör — företag (självbetjänat).**
   `Company` + `CompanyRepository` (in-memory + Supabase), migration `0014`
   (`companies` + `company_members` + `create_company`/`is_company_member` som

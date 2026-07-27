@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import {
   matchJobs,
-  StaticJobCatalog,
   StaticSkillTaxonomy,
+  SupabaseJobRepository,
   SupabaseProfileRepository,
 } from "@elevantly/core";
 import type { Confidence, JobMatch } from "@elevantly/core";
@@ -35,7 +35,7 @@ export default async function JobsPage() {
   const decisions = profile?.decisions ?? [];
   const [skills, jobs] = await Promise.all([
     new StaticSkillTaxonomy().list(),
-    new StaticJobCatalog().list(),
+    new SupabaseJobRepository(supabase).listPublished(),
   ]);
   const matches = matchJobs(decisions, jobs, skills);
 
@@ -59,10 +59,15 @@ export default async function JobsPage() {
           title="Vi behöver något att utgå från."
           body="Beskriv vad du gjort i jobbet i Spegeln, så matchar vi dig mot jobb som faktiskt stämmer med din erfarenhet."
         />
+      ) : jobs.length === 0 ? (
+        <EmptyState
+          title="Inga jobb är utlysta än."
+          body="Så snart arbetsgivare publicerar jobb matchar vi dem mot dina beslut och visar exakt varför de passar. Har du ett företag kan du posta jobb själv."
+        />
       ) : matches.length === 0 ? (
         <EmptyState
           title="Inga träffar än."
-          body="Dina beslut matchar inte de jobb vi har just nu. Beskriv mer i Spegeln — fler grundade beslut ger fler och bättre träffar."
+          body="Dina beslut matchar inte de jobb som är utlysta just nu. Beskriv mer i Spegeln — fler grundade beslut ger fler och bättre träffar."
         />
       ) : (
         <>

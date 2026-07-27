@@ -162,8 +162,12 @@ export { InMemoryCompanyRepository } from "./company/inMemoryCompanyRepository";
 export { SupabaseCompanyRepository } from "./company/supabaseCompanyRepository";
 
 // Jobb & rekrytering: strukturerade annonser + grundad, förklarbar matchning
-export type { Job } from "./jobs/job";
+export type { Job, JobInput, JobStatus } from "./jobs/job";
+export { isValidJobInput } from "./jobs/job";
 export type { JobCatalog } from "./jobs/jobCatalog";
 export { StaticJobCatalog, DEFAULT_JOBS } from "./jobs/staticJobCatalog";
+export type { JobRepository } from "./jobs/jobRepository";
+export { InMemoryJobRepository } from "./jobs/inMemoryJobRepository";
+export { SupabaseJobRepository } from "./jobs/supabaseJobRepository";
 export { matchJobs } from "./jobs/matchJobs";
 export type { JobMatch, JobSkillEvidence } from "./jobs/matchJobs";
