@@ -134,6 +134,12 @@ ESCO/SSYK), **jobbannons-entitet** (strukturerade krav + RLS), **`matchJob`/sök
 `/jobs` med förklarbara träffar) · 6b arbetsgivarkonton + annonsering · 6c
 ansökningar + granskning + samtycke · 6d full ESCO/SSYK-taxonomi (anti-djungel skarpt).
 
+- Byggt (fas 6b-1): **arbetsgivare som aktör — företag (självbetjänat).**
+  `Company` + `CompanyRepository` (in-memory + Supabase), migration `0014`
+  (`companies` + `company_members` + `create_company`/`is_company_member` som
+  `security definer` — skapande + första medlemskap atomiskt, ingen kan gå med i
+  någon annans företag; RLS: bara medlemmar ser sitt företag). `/company` (skapa +
+  se dina företag) och "Företag" i kontomenyn. Nästa (6b-2): posta/hantera jobb.
 - Byggt (fas 6a, första bricken): **kanonisk taxonomi + grundad jobbmatchning.**
   `SkillTaxonomy` (interface, §8.4) + `StaticSkillTaxonomy` (kurerad seed med synonymer)
   som viker in titelvarianter till ett begrepp — `canonicalizeTerm` återanvänder

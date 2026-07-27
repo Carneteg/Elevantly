@@ -180,6 +180,12 @@ function AccountMenu({
           >
             Nätverk
           </a>
+          <a
+            href="/company"
+            className="block rounded-lg px-3 py-2 text-sm hover:bg-[var(--color-canvas)]"
+          >
+            Företag
+          </a>
           <form action="/auth/signout" method="post">
             <button
               type="submit"
