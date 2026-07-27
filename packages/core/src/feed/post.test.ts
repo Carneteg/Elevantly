@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isValidPostBody,
   MAX_POST_LENGTH,
+  normalizeGrounding,
   normalizePostBody,
   orderFeed,
 } from "./post";
@@ -28,6 +29,26 @@ describe("normalizePostBody / isValidPostBody", () => {
   it("underkänner text över längdgränsen", () => {
     expect(isValidPostBody("a".repeat(MAX_POST_LENGTH))).toBe(true);
     expect(isValidPostBody("a".repeat(MAX_POST_LENGTH + 1))).toBe(false);
+  });
+});
+
+describe("normalizeGrounding", () => {
+  it("trimmar action och behåller ett utfall", () => {
+    expect(normalizeGrounding({ action: "  Ledde X  ", outcome: " +12% " })).toEqual({
+      action: "Ledde X",
+      outcome: "+12%",
+    });
+  });
+
+  it("utelämnar ett tomt utfall", () => {
+    expect(normalizeGrounding({ action: "Byggde Y", outcome: "   " })).toEqual({
+      action: "Byggde Y",
+    });
+  });
+
+  it("ger undefined utan meningsfull action", () => {
+    expect(normalizeGrounding(undefined)).toBeUndefined();
+    expect(normalizeGrounding({ action: "   " })).toBeUndefined();
   });
 });
 

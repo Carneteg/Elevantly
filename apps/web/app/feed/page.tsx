@@ -37,11 +37,19 @@ export default async function FeedPage() {
   const contactIds = accepted.map((c) => otherParty(c, user.id));
   const authorIds = [user.id, ...contactIds];
 
-  const [feed, summaries] = await Promise.all([
+  const [feed, summaries, ownProfile] = await Promise.all([
     posts.listByAuthors(authorIds, FEED_LIMIT),
     profiles.loadPublicSummariesByIds(contactIds),
+    profiles.load(user.id),
   ]);
   const byId = new Map(summaries.map((s) => [s.userId, s]));
+
+  // Egna beslut som ett inlägg kan grundas i (index matchar profilens ordning —
+  // servern validerar indexet vid publicering).
+  const decisionOptions = (ownProfile?.decisions ?? []).map((d, index) => ({
+    index,
+    label: truncate(d.outcome ? `${d.action} → ${d.outcome}` : d.action, 80),
+  }));
 
   return (
     <main className="mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-2xl flex-col px-6 py-12">
@@ -55,7 +63,7 @@ export default async function FeedPage() {
       </header>
 
       <div className="mb-10">
-        <PostComposer />
+        <PostComposer decisions={decisionOptions} />
       </div>
 
       <section aria-label="Flöde">
@@ -111,6 +119,16 @@ function PostCard({
       <p className="mt-3 whitespace-pre-wrap break-words leading-snug">
         {post.body}
       </p>
+      {post.groundedIn && (
+        <p className="mt-3 inline-flex flex-wrap items-baseline gap-1.5 rounded-lg bg-[var(--color-accent)]/10 px-3 py-2 text-sm text-[var(--color-accent)]">
+          <span aria-hidden="true">◆</span>
+          <span>
+            <span className="font-medium">Grundat i ett beslut:</span>{" "}
+            {post.groundedIn.action}
+            {post.groundedIn.outcome ? ` → ${post.groundedIn.outcome}` : ""}
+          </span>
+        </p>
+      )}
       {!isOwn && (
         <div className="mt-3">
           <ReportButton subjectType="post" subjectId={post.id} />
@@ -134,6 +152,11 @@ function AuthorName({
       {author.displayName ?? `@${author.handle}`}
     </a>
   );
+}
+
+/** Kortar en etikett till `max` tecken (för besluts-väljaren). */
+function truncate(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
 /** Enkel, läsbar tidsstämpel (sv-SE). */

@@ -89,10 +89,11 @@ export {
 export { InMemoryPostRepository } from "./feed/inMemoryPostRepository";
 export { SupabasePostRepository } from "./feed/supabasePostRepository";
 export type { PostRepository } from "./feed/postRepository";
-export type { Post } from "./feed/post";
+export type { Post, PostGrounding } from "./feed/post";
 export {
   isValidPostBody,
   normalizePostBody,
+  normalizeGrounding,
   orderFeed,
   MAX_POST_LENGTH,
 } from "./feed/post";

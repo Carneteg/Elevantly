@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { isValidPostBody, SupabasePostRepository } from "@elevantly/core";
+import {
+  isValidPostBody,
+  SupabasePostRepository,
+  SupabaseProfileRepository,
+} from "@elevantly/core";
+import type { PostGrounding } from "@elevantly/core";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -53,7 +58,26 @@ export async function POST(
     if (!isValidPostBody(text)) {
       return jsonError("Skriv något först (och håll det under 3000 tecken).", 400);
     }
-    await posts.create(user.id, text, new Date().toISOString());
+
+    // Valfri grund: ett av författarens EGNA beslut. Vi litar aldrig på klientens
+    // text — vi laddar användarens beslut och bygger ögonblicksbilden från det
+    // faktiska beslutet vid `decisionIndex` (CLAUDE.md 8.3).
+    let grounding: PostGrounding | undefined;
+    if (body.decisionIndex !== undefined && body.decisionIndex !== null) {
+      const index = Number(body.decisionIndex);
+      const profiles = new SupabaseProfileRepository(supabase);
+      const profile = await profiles.load(user.id);
+      const decision = profile?.decisions?.[index];
+      if (!Number.isInteger(index) || !decision) {
+        return jsonError("Ogiltigt beslut.", 400);
+      }
+      grounding = {
+        action: decision.action,
+        ...(decision.outcome ? { outcome: decision.outcome } : {}),
+      };
+    }
+
+    await posts.create(user.id, text, new Date().toISOString(), grounding);
     return NextResponse.json({ ok: true });
   } catch {
     return jsonError("Åtgärden kunde inte genomföras. Försök igen.", 502);

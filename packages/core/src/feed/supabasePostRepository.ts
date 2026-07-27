@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Post } from "./post";
-import { isValidPostBody, normalizePostBody } from "./post";
+import type { Post, PostGrounding } from "./post";
+import { isValidPostBody, normalizeGrounding, normalizePostBody } from "./post";
 import type { PostRepository } from "./postRepository";
 
 /**
@@ -12,29 +12,37 @@ import type { PostRepository } from "./postRepository";
  */
 
 const TABLE = "posts";
-const COLUMNS = "id, author_id, body, created_at";
+const COLUMNS = "id, author_id, body, created_at, grounded_in";
 
 interface PostRow {
   id: string;
   author_id: string;
   body: string;
   created_at: string;
+  grounded_in: PostGrounding | null;
 }
 
 export class SupabasePostRepository implements PostRepository {
   constructor(private readonly client: SupabaseClient) {}
 
-  async create(authorId: string, body: string, now: string): Promise<Post> {
+  async create(
+    authorId: string,
+    body: string,
+    now: string,
+    groundedIn?: PostGrounding,
+  ): Promise<Post> {
     if (!authorId) throw new Error("authorId krävs för att skapa ett inlägg.");
     if (!isValidPostBody(body)) {
       throw new Error("Ogiltig inläggstext (tom eller för lång).");
     }
+    const grounding = normalizeGrounding(groundedIn);
     const { data, error } = await this.client
       .from(TABLE)
       .insert({
         author_id: authorId,
         body: normalizePostBody(body),
         created_at: now,
+        grounded_in: grounding ?? null,
       })
       .select(COLUMNS)
       .single<PostRow>();
@@ -70,10 +78,12 @@ export class SupabasePostRepository implements PostRepository {
 }
 
 function rowToPost(row: PostRow): Post {
+  const grounding = normalizeGrounding(row.grounded_in ?? undefined);
   return {
     id: row.id,
     authorId: row.author_id,
     body: row.body,
     createdAt: row.created_at,
+    ...(grounding ? { groundedIn: grounding } : {}),
   };
 }
