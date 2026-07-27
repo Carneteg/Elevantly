@@ -79,10 +79,17 @@ till.
   `/messages` (samtal = kontakter), `/messages/[handle]` (live tråd via Supabase
   Realtime + kompositor), "Meddela" på kontakter. Strikt privat (§9).
 
-### 5. Möjligheter
+### 5. Möjligheter — 🔜 *pågår*
 **Användarfråga:** *"Vilka roller/samarbeten passar det jag faktiskt gjort?"*
-- Matcha profil mot roller/samarbeten — bygger på den grundade datan och
-  (senare) marknadsinsikter.
+- Byggt (v1): grundad **rollmatchning**. `matchRoles` matchar användarens beslut/
+  kompetenser mot rollarketyper — rent, deterministiskt och **förklarbart**
+  (CLAUDE.md 8.5): varje förslag visar exakt vilka kompetenser och beslut det
+  vilar på (8.3), och en roll föreslås aldrig utan spårbart stöd (11). Rollkällan
+  är utbytbar (`RoleCatalog`, 8.4): v1 är en kurerad katalog i repot
+  (`StaticRoleCatalog`), en extern taxonomi (ESCO/SSYK) kan ersätta den senare.
+  `/opportunities` (server-renderad, ger värde utan nätverk — 6.2) + nav.
+- Senare: rikare relevans (embeddings/RAG), samarbeten/möjligheter från nätverket,
+  och marknadsinsikter (lön/rolltrender) med spårbar källa per siffra.
 
 ### Tvärgående: trust & safety — 🔜 *pågår*
 Ett socialt lager kräver **moderering, rapportering och missbruksskydd** från

@@ -132,3 +132,11 @@ export { InMemoryBlockRepository } from "./moderation/inMemoryBlockRepository";
 export { SupabaseBlockRepository } from "./moderation/supabaseBlockRepository";
 export type { BlockRepository } from "./moderation/blockRepository";
 export type { Block } from "./moderation/block";
+
+// Möjligheter: grundad rollmatchning (utbytbar rollkälla — v1 in-repo)
+export type { Role } from "./opportunities/role";
+export { normalizeText, tokenize } from "./opportunities/role";
+export type { RoleCatalog } from "./opportunities/roleCatalog";
+export { StaticRoleCatalog, DEFAULT_ROLES } from "./opportunities/staticRoleCatalog";
+export { matchRoles } from "./opportunities/matchRoles";
+export type { RoleMatch, CapabilityEvidence } from "./opportunities/matchRoles";
