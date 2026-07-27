@@ -95,9 +95,20 @@ start — förtroende är produkten. Planeras in parallellt, inte som eftertanke
   (in-memory + Supabase), migration `0007` (RLS: se bara egna blockeringar +
   `security definer`-funktionen `is_blocked_with` som svarar ömsesidigt utan att
   avslöja att man blockerats). Blockering bryter befintlig koppling och nekar nya
-  meddelanden/förfrågningar (upprätthålls i rutterna). `BlockButton` på `/u/handle`.
-- Nästa: en **granskningsvy** för rapporter/blockeringar (admin), och att lyfta
-  blockering till DB-nivå (RLS på inlägg/meddelanden) som djupare försvar.
+  meddelanden/förfrågningar. `BlockButton` på `/u/handle`.
+- Byggt (tredje bricken): **blockering i datalagret (defense in depth)**. Migration
+  `0009` lyfter blockeringskontrollen från route-koden ner i RLS: `is_blocked_with`
+  vävs in i policyerna för att skicka meddelande, skapa/acceptera kontakt och se
+  flödesinlägg. Route-koden behåller sina kontroller för vänliga felmeddelanden —
+  två lås, inte ett. Nu kan ingen app-väg glömma spärren.
+- Byggt (fjärde bricken): **granskningskö för rapporter (admin)**. Migration `0010`
+  inför en `admins`-tabell + `is_admin()` (security definer) och en RLS-policy så
+  att bara granskare kan LÄSA rapporter (medlemskap hanteras out-of-band via SQL —
+  ingen kan ge sig själv admin via API:t). `ReportRepository.listForReview` +
+  en server-skyddad `/admin`-sida (404 för icke-granskare) som visar flaggat
+  innehåll nyast först. Ingen automatik — en signal för mänskligt beslut.
+- Nästa: åtgärder i granskningsvyn (markera hanterad/avvisad), och ett beslut om
+  huruvida blockeringar ska exponeras för granskare (idag privata by design).
 
 ### Tvärgående: data & integritet (GDPR) — ✅ *byggt (första bricken)*
 **Användarfråga:** *"Kan jag se, ta med mig och radera min data?"* Med

@@ -56,4 +56,17 @@ describe("InMemoryReportRepository", () => {
       repo.create("user-1", "post", "   ", "", "2026-01-01T00:00:00.000Z"),
     ).rejects.toThrow();
   });
+
+  it("listar granskningskön nyast först och respekterar limit", async () => {
+    const repo = new InMemoryReportRepository();
+    await repo.create("u1", "post", "p1", "", "2026-01-01T00:00:00.000Z");
+    await repo.create("u2", "profile", "tobias", "", "2026-03-03T00:00:00.000Z");
+    await repo.create("u3", "message", "m9", "", "2026-02-02T00:00:00.000Z");
+
+    const queue = await repo.listForReview();
+    expect(queue.map((r) => r.subjectId)).toEqual(["tobias", "m9", "p1"]);
+
+    const limited = await repo.listForReview(2);
+    expect(limited.map((r) => r.subjectId)).toEqual(["tobias", "m9"]);
+  });
 });
