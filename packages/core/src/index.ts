@@ -148,6 +148,19 @@ export { canonicalizeTerm } from "./taxonomy/skill";
 export type { SkillTaxonomy } from "./taxonomy/skillTaxonomy";
 export { StaticSkillTaxonomy, DEFAULT_SKILLS } from "./taxonomy/staticSkillTaxonomy";
 
+// Arbetsgivare: företag som aktör (utbytbart lager — in-memory + Supabase)
+export type { Company } from "./company/company";
+export {
+  isValidCompanyName,
+  normalizeCompanyName,
+  normalizeCompanySummary,
+  MAX_COMPANY_NAME,
+  MAX_COMPANY_SUMMARY,
+} from "./company/company";
+export type { CompanyRepository } from "./company/companyRepository";
+export { InMemoryCompanyRepository } from "./company/inMemoryCompanyRepository";
+export { SupabaseCompanyRepository } from "./company/supabaseCompanyRepository";
+
 // Jobb & rekrytering: strukturerade annonser + grundad, förklarbar matchning
 export type { Job } from "./jobs/job";
 export type { JobCatalog } from "./jobs/jobCatalog";
